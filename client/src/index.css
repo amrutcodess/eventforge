@@ -4,23 +4,56 @@
 
 @layer base {
   body {
-    background-color: #F8F9FA;
-    color: #121413;
+    background-color: #0B0D0C;
+    color: #F8F9FA;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
   }
 }
 
-/* Custom smooth scroll bar */
+/* ScrollTide Glassmorphism Utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(45, 74, 62, 0.5);
+  box-shadow: 0 0 30px rgba(45, 74, 62, 0.25);
+  transform: translateY(-4px);
+}
+
+/* Gradient Text Clipping */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #FFFFFF 0%, #A7F3D0 50%, #2D4A3E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom smooth dark scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0F1715;
+  background: #0B0D0C;
 }
 ::-webkit-scrollbar-thumb {
   background: #2D4A3E;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B5F50;
+  background: #3B6051;
 }

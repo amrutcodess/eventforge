@@ -2,33 +2,35 @@ import React from 'react';
 
 export const Badge = ({
   children,
-  variant = 'success',
+  variant = 'accent',
   dot = true,
   className = ''
 }) => {
   const variants = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200/60 dot-emerald-500',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200/60 dot-amber-500',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200/60 dot-rose-500',
-    info: 'bg-sky-50 text-sky-700 border-sky-200/60 dot-sky-500',
-    accent: 'bg-forge-accentLight text-forge-accent border-forge-accent/20 dot-forge-accent',
-    dark: 'bg-slate-800 text-slate-200 border-slate-700 dot-emerald-400'
+    accent: 'bg-forge-accent/30 text-emerald-300 border-forge-accent/60',
+    gold: 'bg-forge-gold/20 text-amber-300 border-forge-gold/40',
+    success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+    warning: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    danger: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    info: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    dark: 'bg-white/10 text-slate-300 border-white/15'
   };
 
   const dotColors = {
-    success: 'bg-emerald-500',
-    warning: 'bg-amber-500',
-    danger: 'bg-rose-500',
-    info: 'bg-sky-500',
-    accent: 'bg-forge-accent',
-    dark: 'bg-emerald-400'
+    accent: 'bg-emerald-400',
+    gold: 'bg-amber-400',
+    success: 'bg-emerald-400',
+    warning: 'bg-amber-400',
+    danger: 'bg-rose-400',
+    info: 'bg-sky-400',
+    dark: 'bg-slate-400'
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border ${variants[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full border backdrop-blur-md ${variants[variant]} ${className}`}
     >
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotColors[variant] || 'bg-slate-400'} animate-pulse`} />}
+      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotColors[variant]} animate-pulse`} />}
       <span>{children}</span>
     </span>
   );
