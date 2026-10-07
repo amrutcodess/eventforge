@@ -45,7 +45,7 @@ router.get('/my-all', protect, async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     const withQRCodes = await Promise.all(regs.map(async (reg) => {
-      const qrDataUri = await generateQRCodeDataURI(reg.qrCodeToken);
+      const qrCodeDataUri = await generateQRCodeDataURI(reg.qrCodeToken);
       return {
         ...reg.toObject(),
         qrCodeDataUri
