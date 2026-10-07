@@ -33,15 +33,32 @@ router.get('/', async (req, res, next) => {
       .sort({ startDate: 1 })
       .lean();
 
-    // `minPrice` and `sessionCount` are attached here because the marketing pages need them and
-    // used to invent them (a hardcoded "$149" on the featured-event cards). Two grouped
-    // aggregates rather than a query per event, and both are real numbers straight from the
-    // ticket tiers and the programme.
+    // `minPrice`, `sessionCount` and the ticket tiers are attached here because the marketing
+    // pages need them and used to invent them (a hardcoded "$149" on the featured-event cards).
+    // Two grouped aggregates rather than a query per event, and every value is a real number
+    // straight from the ticket tiers and the programme. The tiers are carried whole — name,
+    // price, description — so the landing page's pass section prices a real event instead of
+    // inventing SaaS tiers.
     const ids = events.map((e) => e._id);
     const [priceRows, sessionRows] = await Promise.all([
       TicketCategory.aggregate([
         { $match: { eventId: { $in: ids } } },
-        { $group: { _id: '$eventId', minPrice: { $min: '$price' }, ticketCount: { $sum: 1 } } }
+        { $sort: { price: 1 } },
+        {
+          $group: {
+            _id: '$eventId',
+            minPrice: { $min: '$price' },
+            ticketCount: { $sum: 1 },
+            categories: {
+              $push: {
+                name: '$name',
+                price: '$price',
+                description: '$description',
+                capacity: '$capacity'
+              }
+            }
+          }
+        }
       ]),
       Session.aggregate([
         { $match: { eventId: { $in: ids } } },
@@ -59,6 +76,7 @@ router.get('/', async (req, res, next) => {
           ...e,
           minPrice: pricing ? pricing.minPrice : null,
           ticketCount: pricing ? pricing.ticketCount : 0,
+          ticketCategories: pricing ? pricing.categories : [],
           sessionCount: sessionCounts.get(String(e._id)) || 0
         };
       })

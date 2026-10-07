@@ -67,6 +67,12 @@
   .section-dark {
     @apply bg-night text-white py-24 md:py-32;
   }
+  /* A third tone, for the one place two light sections sit next to each other (passes, then
+     FAQ). The design separates sections by background, not by a rule, so two `canvas` bands in
+     a row would read as one very long section. */
+  .section-muted {
+    @apply bg-surface-muted py-32 md:py-40;
+  }
   .gutter {
     @apply mx-auto w-full max-w-7xl px-8 md:px-16;
   }

@@ -87,12 +87,17 @@ export const AssistantWidget = () => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
 
-  const { event } = useAssistantContext();
+  const { event, request, clearRequest } = useAssistantContext();
 
   const panelRef = useRef(null);
   const inputRef = useRef(null);
   const launcherRef = useRef(null);
   const scrollRef = useRef(null);
+  // The nonce of the last deep-linked question this widget has already handled. Compared rather
+  // than a boolean because `send` is re-created whenever the conversation changes, so the effect
+  // below re-runs constantly — without the guard it would re-ask the same question on every
+  // render.
+  const handledRequestRef = useRef(null);
 
   // Focus the input on open, and hand focus back to the launcher on close — otherwise closing
   // with the keyboard drops focus to `<body>` and the next Tab starts from the top of the page.
@@ -165,6 +170,17 @@ export const AssistantWidget = () => {
     },
     [messages, pending, event]
   );
+
+  // A question handed in from elsewhere on the site (the landing page's AI section). Opening the
+  // panel and asking in one step is the whole point — dropping the visitor into an empty composer
+  // would make them retype a question the page already wrote for them.
+  useEffect(() => {
+    if (!request || handledRequestRef.current === request.nonce) return;
+    handledRequestRef.current = request.nonce;
+    setIsOpen(true);
+    send(request.question);
+    clearRequest();
+  }, [request, send, clearRequest]);
 
   const starters = messages.length === 0
     ? event
