@@ -327,6 +327,8 @@ export const OrganizerDashboard = () => {
         isOpen={aiModalOpen}
         onClose={() => setAiModalOpen(false)}
         onInsertDraft={(draft) => setSSummary(draft)}
+        eventId={selectedEvent?._id || null}
+        eventTitle={selectedEvent?.title || null}
       />
 
     </div>

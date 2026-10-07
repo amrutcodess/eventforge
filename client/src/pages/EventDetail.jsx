@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
+import { EventBrief } from '../components/ai/EventBrief';
+import { useAssistantContext } from '../context/AssistantContext';
 import { Calendar, MapPin, Clock, Ticket, Check, ShieldCheck, FileText, Megaphone } from 'lucide-react';
 import api from '../utils/api';
 
@@ -12,6 +14,7 @@ export const EventDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setEvent: setAssistantEvent } = useAssistantContext();
 
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +45,11 @@ export const EventDetail = () => {
       setEventData(res.data);
       fetchAnnouncements(res.data.event._id);
 
+      // Publish the event to the assistant widget, which is mounted outside the route and so
+      // cannot read `useParams`. Passing the id (not the slug) means the server can resolve it
+      // against the caller's real permissions without a second lookup.
+      setAssistantEvent({ id: res.data.event._id, title: res.data.event.title });
+
       if (res.data.userPermissions?.isAttendee) {
         fetchMySessions(res.data.event._id);
       }
@@ -51,6 +59,10 @@ export const EventDetail = () => {
       setLoading(false);
     }
   };
+
+  // Clear the published event when leaving, so the assistant stops scoping its answers to an
+  // event the visitor is no longer looking at.
+  useEffect(() => () => setAssistantEvent(null), [setAssistantEvent]);
 
   const fetchAnnouncements = async (eventId) => {
     try {
@@ -250,6 +262,10 @@ export const EventDetail = () => {
           </div>
         </section>
       )}
+
+      {/* ── AI EVENT BRIEF — light band. Renders nothing if it cannot load, so the page
+             below never depends on it. ── */}
+      <EventBrief eventId={event._id} />
 
       {/* ── TAB BAR. `top-20` is coupled to the Navbar's `h-20` — keep them in sync. ── */}
       <section className="sticky top-20 z-30 border-b border-line bg-canvas">

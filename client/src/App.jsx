@@ -1,10 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AssistantProvider } from './context/AssistantContext';
 import { Navbar } from './components/ui/Navbar';
 import { Footer } from './components/ui/Footer';
 import { SmoothScroll } from './components/motion/SmoothScroll';
 import { ScrollToTop } from './components/motion/ScrollToTop';
+import { AssistantWidget } from './components/ai/AssistantWidget';
 
 import { Landing } from './pages/Landing';
 import { EventDetail } from './pages/EventDetail';
@@ -31,33 +33,40 @@ const RequireAuth = ({ children }) => {
 export function App() {
   return (
     <AuthProvider>
-      <Router>
-        <SmoothScroll />
-        <ScrollToTop />
-        <div className="flex flex-col min-h-screen bg-canvas text-ink font-sans">
-          <Navbar />
+      <AssistantProvider>
+        <Router>
+          <SmoothScroll />
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen bg-canvas text-ink font-sans">
+            <Navbar />
 
-          <div className="flex-1">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/events/:slug" element={<EventDetail />} />
-              <Route path="/ticket-pass/:id" element={<TicketPass />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <RequireAuth>
-                    <DashboardContainer />
-                  </RequireAuth>
-                }
-              />
-            </Routes>
+            <div className="flex-1">
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/events/:slug" element={<EventDetail />} />
+                <Route path="/ticket-pass/:id" element={<TicketPass />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RequireAuth>
+                      <DashboardContainer />
+                    </RequireAuth>
+                  }
+                />
+              </Routes>
+            </div>
+
+            <Footer />
           </div>
 
-          <Footer />
-        </div>
-      </Router>
+          {/* Inside the router so it can read the active route, and inside AuthProvider so it
+              sends the token when there is one — an authenticated visitor gets the higher rate
+              tier and, on an event they help run, the unpublished programme too. */}
+          <AssistantWidget />
+        </Router>
+      </AssistantProvider>
     </AuthProvider>
   );
 }
