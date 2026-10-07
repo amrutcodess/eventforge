@@ -3,20 +3,11 @@ import { useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import { gsap, ScrollTrigger } from '../../lib/gsap';
 import { setLenis } from '../../lib/lenis';
-
-// Public pages only. Dashboards hold long data tables where hijacked scrolling is a
-// usability cost, not a flourish — they keep native scroll.
-const PUBLIC_ROUTES = [
-  /^\/$/,
-  /^\/events\//,
-  /^\/ticket-pass\//,
-  /^\/login$/,
-  /^\/register$/,
-];
+import { isPublicRoute } from '../../lib/routes';
 
 export const SmoothScroll = () => {
   const { pathname } = useLocation();
-  const isPublic = PUBLIC_ROUTES.some((route) => route.test(pathname));
+  const isPublic = isPublicRoute(pathname);
 
   // Keyed on the boolean, not on `pathname`: public → public navigation must NOT tear
   // down and rebuild Lenis, which would reset scroll position mid-journey.

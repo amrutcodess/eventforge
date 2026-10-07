@@ -24,7 +24,7 @@ export const Button = ({
   className = ''
 }) => {
   const baseStyles =
-    'group inline-flex items-center justify-center rounded-none font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer ' +
+    'group relative overflow-hidden inline-flex items-center justify-center rounded-none font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer ' +
     // `grayscale` alongside the opacity: fading crimson to 50% over a white card produces a
     // pink that is not in the palette and reads as broken rather than disabled. Desaturating
     // first keeps a disabled primary neutral. It is a no-op on the already-neutral
@@ -61,11 +61,21 @@ export const Button = ({
         caps ? 'text-caps-btn uppercase' : sizes[size]
       } ${className}`}
     >
-      <span>{children}</span>
+      {/* Background sweep on the filled variant only. On `primary` the button's own colour
+          change is subtle enough that a wipe reads as an addition; on the outlined variants
+          there is nothing to wipe. `pointer-events-none` so it can never swallow the click,
+          and it sits below the label in the stacking order. */}
+      {variant === 'primary' && !disabled && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 ease-out group-hover:translate-x-0 motion-reduce:hidden"
+        />
+      )}
+      <span className="relative z-10">{children}</span>
       {showIcon && Icon && (
         // Bare icon that nudges diagonally on hover. The previous circular icon chip was
         // deleted; its `group-hover:` reference had no `group` parent, so it never fired.
-        <Icon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        <Icon className="relative z-10 w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       )}
     </button>
   );

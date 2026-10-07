@@ -6,6 +6,8 @@ import { Navbar } from './components/ui/Navbar';
 import { Footer } from './components/ui/Footer';
 import { SmoothScroll } from './components/motion/SmoothScroll';
 import { ScrollToTop } from './components/motion/ScrollToTop';
+import { ScrollProgress } from './components/motion/ScrollProgress';
+import { PageTransition } from './components/motion/PageTransition';
 import { AssistantWidget } from './components/ai/AssistantWidget';
 
 import { Landing } from './pages/Landing';
@@ -37,25 +39,28 @@ export function App() {
         <Router>
           <SmoothScroll />
           <ScrollToTop />
+          <ScrollProgress />
           <div className="flex flex-col min-h-screen bg-canvas text-ink font-sans">
             <Navbar />
 
             <div className="flex-1">
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/events/:slug" element={<EventDetail />} />
-                <Route path="/ticket-pass/:id" element={<TicketPass />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <RequireAuth>
-                      <DashboardContainer />
-                    </RequireAuth>
-                  }
-                />
-              </Routes>
+              <PageTransition>
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/events/:slug" element={<EventDetail />} />
+                  <Route path="/ticket-pass/:id" element={<TicketPass />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <RequireAuth>
+                        <DashboardContainer />
+                      </RequireAuth>
+                    }
+                  />
+                </Routes>
+              </PageTransition>
             </div>
 
             <Footer />

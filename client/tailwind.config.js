@@ -71,6 +71,13 @@ export default {
         'rise-in': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'none' }
+        },
+        // Exactly -50%: the marquee track holds two identical copies, so at the halfway point
+        // the second copy is where the first began and the loop is seamless. Any other value
+        // produces a visible jump.
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' }
         }
       },
       animation: {
@@ -78,6 +85,7 @@ export default {
         // no-op. It is real now.
         'fade-in': 'fade-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both',
         'rise-in': 'rise-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'marquee': 'marquee 42s linear infinite',
       },
     },
   },
