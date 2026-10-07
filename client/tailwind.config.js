@@ -16,11 +16,13 @@ export default {
           glassBorder: 'rgba(255, 255, 255, 0.12)',
           accent: '#2D4A3E',
           accentGlow: '#3B6051',
+          accentHover: '#21392E',
           accentLight: 'rgba(45, 74, 62, 0.25)',
           gold: '#D4AF37',
           goldGlow: 'rgba(212, 175, 55, 0.3)',
           cyan: '#00F2FE',
-          bg: '#F8F9FA'
+          bg: '#F8F9FA',
+          warmGrey: '#F4F4F0'
         }
       },
       fontFamily: {
@@ -37,6 +39,7 @@ export default {
       boxShadow: {
         'forge-soft': '0 20px 40px -15px rgba(0, 0, 0, 0.5)',
         'forge-glow': '0 0 40px rgba(45, 74, 62, 0.4)',
+        'forge-card': '0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -14px rgba(15, 23, 42, 0.18)',
         'gold-glow': '0 0 35px rgba(212, 175, 55, 0.35)',
         'glass-card': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
       },

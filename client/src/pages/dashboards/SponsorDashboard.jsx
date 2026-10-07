@@ -1,22 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { DataTable } from '../../components/ui/DataTable';
-import { Award, CheckCircle2, Clock, Upload, ExternalLink } from 'lucide-react';
+import { Award, Upload, ExternalLink, CheckCircle, AlertCircle, Package } from 'lucide-react';
+import api from '../../utils/api';
 
 export const SponsorDashboard = () => {
-  const [deliverables, setDeliverables] = useState([
-    { _id: 'd1', title: 'High-Res Vector Brand Logo (SVG/EPS)', description: 'For keynote backdrop and badge lanyard printing', status: 'approved', dueDate: '2026-10-01', fileUrl: 'https://synthetix.cloud/logo.svg' },
-    { _id: 'd2', title: '15-second Mainstage Video Reel (MP4)', description: 'Looping during keynote intermissions', status: 'submitted', dueDate: '2026-10-05', fileUrl: 'https://synthetix.cloud/reel.mp4' },
-    { _id: 'd3', title: 'Exhibition Booth Floor Plan Sign-off', description: '20x20 feet expo footprint design dimensions', status: 'pending', dueDate: '2026-10-08', fileUrl: '' }
-  ]);
+  const [sponsorships, setSponsorships] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadingId, setUploadingId] = useState(null);
+  const [status, setStatus] = useState(null);
 
-  const handleSimulateUpload = (id) => {
-    setDeliverables(deliverables.map(d => d._id === id ? { ...d, status: 'submitted', fileUrl: 'https://example.com/asset-uploaded.pdf' } : d));
+  const fileInputRef = useRef(null);
+  const pendingRef = useRef(null); // { sponsorship, deliverable }
+
+  useEffect(() => {
+    fetchSponsorships();
+  }, []);
+
+  const fetchSponsorships = async () => {
+    try {
+      const res = await api.get('/sponsors/me');
+      setSponsorships(res.data || []);
+    } catch (err) {
+      console.error('Failed to load sponsorships:', err);
+      setStatus({ type: 'error', message: 'Could not load your sponsorship records.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const columns = [
+  const handleUploadClick = (sponsorship, deliverable) => {
+    pendingRef.current = { sponsorship, deliverable };
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    const pending = pendingRef.current;
+    e.target.value = '';
+    if (!file || !pending) return;
+
+    const { sponsorship, deliverable } = pending;
+    setUploadingId(deliverable._id);
+    setStatus(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await api.post('/upload', formData);
+
+      const eventId = sponsorship.eventId?._id || sponsorship.eventId;
+      await api.put(
+        `/events/${eventId}/sponsors/${sponsorship._id}/deliverables/${deliverable._id}`,
+        { fileUrl: uploadRes.data.fileUrl, status: 'submitted' }
+      );
+
+      setSponsorships((prev) =>
+        prev.map((s) =>
+          s._id === sponsorship._id
+            ? {
+                ...s,
+                deliverables: s.deliverables.map((d) =>
+                  d._id === deliverable._id
+                    ? { ...d, fileUrl: uploadRes.data.fileUrl, status: 'submitted' }
+                    : d
+                )
+              }
+            : s
+        )
+      );
+      setStatus({ type: 'success', message: `"${deliverable.title}" submitted for organizer review.` });
+    } catch (err) {
+      setStatus({
+        type: 'error',
+        message: err.response?.data?.error || 'Upload failed. Please try again.'
+      });
+    } finally {
+      setUploadingId(null);
+      pendingRef.current = null;
+    }
+  };
+
+  const buildColumns = (sponsorship) => [
     {
       header: 'Deliverable Asset',
       accessor: (row) => (
@@ -28,69 +95,187 @@ export const SponsorDashboard = () => {
     },
     {
       header: 'Due Date',
-      accessor: (row) => <span className="text-xs text-slate-600 font-mono">{row.dueDate}</span>
+      accessor: (row) => (
+        <span className="text-xs text-slate-600 font-mono">
+          {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '—'}
+        </span>
+      )
     },
     {
       header: 'Review Status',
       accessor: (row) => (
-        <Badge variant={row.status === 'approved' ? 'success' : row.status === 'submitted' ? 'info' : 'warning'}>
-          {row.status.toUpperCase()}
+        <Badge
+          variant={
+            row.status === 'approved'
+              ? 'success'
+              : row.status === 'rejected'
+              ? 'danger'
+              : row.status === 'submitted'
+              ? 'info'
+              : 'warning'
+          }
+        >
+          {row.status}
         </Badge>
       )
     },
     {
       header: 'Asset File',
-      accessor: (row) => (
+      accessor: (row) =>
         row.fileUrl ? (
-          <a href={row.fileUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-forge-accent hover:underline flex items-center gap-1">
-            <span>View File</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href={row.fileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-bold text-forge-accent hover:underline flex items-center gap-1"
+            >
+              <span>View File</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <button
+              onClick={() => handleUploadClick(sponsorship, row)}
+              disabled={uploadingId === row._id}
+              className="text-[10px] font-semibold text-slate-500 hover:text-forge-accent disabled:opacity-50"
+            >
+              Replace
+            </button>
+          </div>
         ) : (
           <button
-            onClick={() => handleSimulateUpload(row._id)}
-            className="text-xs font-semibold text-forge-accent hover:underline flex items-center gap-1"
+            onClick={() => handleUploadClick(sponsorship, row)}
+            disabled={uploadingId === row._id}
+            className="text-xs font-semibold text-forge-accent hover:underline flex items-center gap-1 disabled:opacity-50"
           >
             <Upload className="w-3 h-3" />
-            <span>Upload File</span>
+            <span>{uploadingId === row._id ? 'Uploading...' : 'Upload File'}</span>
           </button>
         )
-      )
     }
   ];
+
+  if (loading) {
+    return <div className="h-64 rounded-3xl bg-slate-100 animate-pulse" />;
+  }
+
+  if (sponsorships.length === 0) {
+    return (
+      <div className="space-y-8 font-sans">
+        <div>
+          <Badge variant="dark">SPONSOR PARTNER</Badge>
+          <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Sponsor Partner Workspace</h1>
+        </div>
+        <Card className="p-12 text-center">
+          <Award className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h3 className="font-serif text-xl font-bold text-slate-900">No Sponsorship Linked</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Your account is not linked to a sponsorship package yet. An event organizer can assign one
+            from the sponsor roster.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 font-sans">
       <div>
-        <Badge variant="dark">SPONSOR PARTNER SHELL</Badge>
+        <Badge variant="dark">SPONSOR PARTNER</Badge>
         <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Sponsor Partner Workspace</h1>
-        <p className="text-xs text-slate-500">Track package entitlements, submit brand collateral, and verify booth deliverables</p>
+        <p className="text-xs text-slate-500">
+          Track package entitlements, submit brand collateral, and verify booth deliverables
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 border border-slate-200">
-          <Badge variant="warning">PLATINUM PARTNER</Badge>
-          <h3 className="font-serif text-xl font-bold text-slate-900 mt-3">Synthetix Cloud</h3>
-          <p className="text-xs text-slate-500 mt-1">Titanium Sponsorship Package ($15,000)</p>
-        </Card>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.ppt,.pptx,.doc,.docx,image/*,video/mp4"
+        onChange={handleFileSelected}
+      />
 
-        <Card className="p-6 border border-slate-200">
-          <p className="text-xs text-slate-500">Deliverables Approved</p>
-          <p className="font-serif text-3xl font-bold text-emerald-600 mt-2">
-            {deliverables.filter(d => d.status === 'approved').length} / {deliverables.length}
-          </p>
-        </Card>
+      {status && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
+            status.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          {status.type === 'success' ? (
+            <CheckCircle className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
+          <span>{status.message}</span>
+        </div>
+      )}
 
-        <Card className="p-6 border border-slate-200">
-          <p className="text-xs text-slate-500">Allocated VIP Passes</p>
-          <p className="font-serif text-3xl font-bold text-slate-900 mt-2">10 Passes</p>
-        </Card>
-      </div>
+      {sponsorships.map((sponsorship) => {
+        const deliverables = sponsorship.deliverables || [];
+        const approved = deliverables.filter((d) => d.status === 'approved').length;
+        const pkg = sponsorship.packageId;
 
-      <Card className="p-6 border border-slate-200 space-y-4">
-        <h2 className="font-serif text-xl font-bold text-slate-900">Brand Deliverables & Assets Tracker</h2>
-        <DataTable columns={columns} data={deliverables} />
-      </Card>
+        return (
+          <div key={sponsorship._id} className="space-y-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="p-6">
+                <Badge variant="warning">{pkg?.tier?.toUpperCase() || 'PARTNER'}</Badge>
+                <h3 className="font-serif text-xl font-bold text-slate-900 mt-3">
+                  {sponsorship.organizationName}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {pkg?.name || 'Sponsorship Package'}
+                  {pkg?.price != null ? ` ($${pkg.price.toLocaleString()})` : ''}
+                </p>
+                {sponsorship.eventId?.title && (
+                  <p className="text-[10px] text-slate-400 mt-2">{sponsorship.eventId.title}</p>
+                )}
+              </Card>
+
+              <Card className="p-6">
+                <p className="text-xs text-slate-500">Deliverables Approved</p>
+                <p className="font-serif text-3xl font-bold text-emerald-600 mt-2">
+                  {approved} / {deliverables.length}
+                </p>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="w-4 h-4 text-forge-accent" />
+                  <p className="text-xs text-slate-500">Package Entitlements</p>
+                </div>
+                {pkg?.benefits?.length > 0 ? (
+                  <ul className="space-y-1">
+                    {pkg.benefits.map((benefit, i) => (
+                      <li key={i} className="text-[11px] text-slate-700 flex items-start gap-1.5">
+                        <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[11px] text-slate-400">No entitlements listed.</p>
+                )}
+              </Card>
+            </div>
+
+            <Card className="p-6 space-y-4">
+              <h2 className="font-serif text-xl font-bold text-slate-900">
+                Brand Deliverables & Assets Tracker
+              </h2>
+              <DataTable
+                columns={buildColumns(sponsorship)}
+                data={deliverables}
+                emptyMessage="No deliverables assigned to this package yet"
+              />
+            </Card>
+
+          </div>
+        );
+      })}
     </div>
   );
 };

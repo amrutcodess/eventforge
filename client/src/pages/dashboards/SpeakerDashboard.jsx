@@ -1,83 +1,289 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { User, Clock, FileText, Upload, Sparkles, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { User, Clock, FileText, Upload, Save, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import api from '../../utils/api';
 
 export const SpeakerDashboard = () => {
-  const { user } = useAuth();
-  const [bio, setBio] = useState(user?.bio || 'Pioneer in multimodal foundation models and autonomous agentic workflows with 20+ patents.');
-  const [slidesUploaded, setSlidesUploaded] = useState(false);
+  const [profiles, setProfiles] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [bio, setBio] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState(null); // { type: 'success' | 'error', message }
+  const [uploadingFor, setUploadingFor] = useState(null);
+
+  const fileInputRef = useRef(null);
+  const pendingSessionRef = useRef(null);
+
+  useEffect(() => {
+    fetchSpeakerData();
+  }, []);
+
+  const fetchSpeakerData = async () => {
+    try {
+      const res = await api.get('/speakers/me');
+      setProfiles(res.data.speakerProfiles || []);
+      setSessions(res.data.sessions || []);
+      setBio(res.data.speakerProfiles?.[0]?.bio || '');
+    } catch (err) {
+      console.error('Failed to load speaker profile:', err);
+      setStatus({ type: 'error', message: 'Could not load your speaker profile.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activeProfile = profiles[0];
+
+  const handleSaveProfile = async () => {
+    if (!activeProfile) return;
+    setSaving(true);
+    setStatus(null);
+    try {
+      const res = await api.put(
+        `/events/${activeProfile.eventId?._id || activeProfile.eventId}/speakers/${activeProfile._id}`,
+        { bio }
+      );
+      setProfiles((prev) => prev.map((p) => (p._id === res.data._id ? { ...p, bio: res.data.bio } : p)));
+      setStatus({ type: 'success', message: 'Speaker profile updated.' });
+    } catch (err) {
+      setStatus({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to save your profile.'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // The hidden file input is shared by every session row; we remember which session
+  // triggered it so the upload attaches to the right one.
+  const handleUploadClick = (session) => {
+    pendingSessionRef.current = session;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    const session = pendingSessionRef.current;
+    e.target.value = '';
+    if (!file || !session) return;
+
+    setUploadingFor(session._id);
+    setStatus(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadRes = await api.post('/upload', formData);
+      const eventId = session.eventId?._id || session.eventId;
+
+      await api.post(`/events/${eventId}/sessions/${session._id}/resources`, {
+        title: uploadRes.data.originalName,
+        url: uploadRes.data.fileUrl,
+        fileType: uploadRes.data.mimeType
+      });
+
+      setSessions((prev) =>
+        prev.map((s) =>
+          s._id === session._id
+            ? {
+                ...s,
+                resources: [
+                  ...(s.resources || []),
+                  { title: uploadRes.data.originalName, url: uploadRes.data.fileUrl, fileType: uploadRes.data.mimeType }
+                ]
+              }
+            : s
+        )
+      );
+      setStatus({ type: 'success', message: `"${uploadRes.data.originalName}" attached to ${session.title}.` });
+    } catch (err) {
+      setStatus({
+        type: 'error',
+        message: err.response?.data?.error || 'Upload failed. Please try again.'
+      });
+    } finally {
+      setUploadingFor(null);
+      pendingSessionRef.current = null;
+    }
+  };
+
+  if (loading) {
+    return <div className="h-64 rounded-3xl bg-slate-100 animate-pulse" />;
+  }
+
+  if (!activeProfile) {
+    return (
+      <div className="space-y-8 font-sans">
+        <div>
+          <Badge variant="gold">SPEAKER PORTAL</Badge>
+          <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Speaker Workstation</h1>
+        </div>
+        <Card className="p-12 text-center">
+          <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h3 className="font-serif text-xl font-bold text-slate-900">No Speaker Profile Linked</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Your account is not yet linked to a speaker record. An event organizer can add you from the
+            event's speaker roster.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 font-sans">
       <div>
-        <Badge variant="warning">SPEAKER PORTAL SHELL</Badge>
+        <Badge variant="gold">SPEAKER PORTAL</Badge>
         <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Speaker Workstation</h1>
-        <p className="text-xs text-slate-500">Manage speaker profile bio, assigned sessions, presentation slides, and room timing</p>
+        <p className="text-xs text-slate-500">Manage your profile bio, assigned sessions, and presentation material</p>
       </div>
 
+      {status && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
+            status.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          {status.type === 'success' ? (
+            <CheckCircle className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
+          <span>{status.message}</span>
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.ppt,.pptx,.doc,.docx,image/*"
+        onChange={handleFileSelected}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        
+
         {/* Left Profile Bio Card */}
-        <Card className="md:col-span-5 p-6 border border-slate-200 text-center space-y-4">
+        <Card className="md:col-span-5 p-6 text-center space-y-4">
           <img
-            src={user?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'}
-            alt={user?.fullName}
+            src={activeProfile.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'}
+            alt={activeProfile.name}
             className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-forge-accent shadow-forge-soft"
           />
           <div>
-            <h2 className="font-serif text-xl font-bold text-slate-900">{user?.fullName || 'Dr. Elena Rostova'}</h2>
-            <p className="text-xs font-semibold text-forge-accent">{user?.title || 'VP of AI Research'}</p>
-            <p className="text-xs text-slate-500">{user?.company || 'Neural Dynamics'}</p>
+            <h2 className="font-serif text-xl font-bold text-slate-900">{activeProfile.name}</h2>
+            <p className="text-xs font-semibold text-forge-accent">{activeProfile.title}</p>
+            <p className="text-xs text-slate-500">{activeProfile.company}</p>
           </div>
 
+          {activeProfile.topicTags?.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {activeProfile.topicTags.map((tag, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] font-semibold bg-forge-warmGrey text-slate-700 px-2.5 py-1 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="text-left pt-3 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Speaker Bio</label>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Speaker Bio
+            </label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-forge-accent h-24"
+              className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-forge-accent h-28"
             />
-            <Button size="sm" variant="primary" className="mt-2 w-full">Save Profile Updates</Button>
+            <Button
+              size="sm"
+              variant="primary"
+              className="mt-2 w-full"
+              onClick={handleSaveProfile}
+              disabled={saving || bio === activeProfile.bio}
+              icon={Save}
+            >
+              {saving ? 'Saving...' : 'Save Profile Updates'}
+            </Button>
           </div>
         </Card>
 
         {/* Right Assigned Sessions */}
         <div className="md:col-span-7 space-y-6">
-          <Card className="p-6 border border-slate-200 space-y-4">
+          <Card className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-serif text-xl font-bold text-slate-900">Assigned Summit Session</h3>
-              <Badge variant="accent">KEYNOTE</Badge>
+              <h3 className="font-serif text-xl font-bold text-slate-900">Assigned Sessions</h3>
+              <Badge variant="accent">{sessions.length} TOTAL</Badge>
             </div>
 
-            <div className="p-4 rounded-2xl bg-forge-warmGrey/60 border border-slate-200 space-y-2">
-              <h4 className="font-serif font-bold text-base text-slate-900">
-                Keynote: The Horizon of Autonomous Agentic Workflows & Neural UI
-              </h4>
-              <p className="text-xs text-slate-600">
-                Grand Imperial Ballroom • Day 1 • 9:00 AM – 10:30 AM (90 mins)
-              </p>
-            </div>
+            {sessions.length === 0 ? (
+              <p className="text-xs text-slate-500">You have not been assigned to any sessions yet.</p>
+            ) : (
+              sessions.map((sess) => (
+                <div key={sess._id} className="p-4 rounded-2xl bg-forge-warmGrey/60 border border-slate-200 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="font-serif font-bold text-base text-slate-900">{sess.title}</h4>
+                    <Badge variant="accent">{sess.track}</Badge>
+                  </div>
 
-            <div className="pt-2">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Presentation Deck (PDF/PPTX)</h4>
-              <div className="p-4 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-2 bg-slate-50">
-                <FileText className="w-8 h-8 text-forge-accent mx-auto" />
-                <p className="text-xs text-slate-600 font-medium">
-                  {slidesUploaded ? 'keynote-presentation-v2-final.pdf (Uploaded)' : 'Drag and drop your keynote slides file here'}
-                </p>
-                <Button
-                  size="sm"
-                  variant={slidesUploaded ? 'ghost' : 'secondary'}
-                  onClick={() => setSlidesUploaded(true)}
-                  icon={Upload}
-                >
-                  {slidesUploaded ? 'Update Presentation File' : 'Upload Slides File'}
-                </Button>
-              </div>
-            </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-forge-accent" />
+                      {sess.roomName}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-forge-accent" />
+                      {new Date(sess.startTime).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+
+                  {sess.resources?.length > 0 && (
+                    <div className="pt-2 border-t border-slate-200 space-y-1">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Attached Material
+                      </p>
+                      {sess.resources.map((r, i) => (
+                        <a
+                          key={i}
+                          href={r.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 text-xs font-semibold text-forge-accent hover:underline"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          {r.title}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleUploadClick(sess)}
+                    disabled={uploadingFor === sess._id}
+                    icon={Upload}
+                  >
+                    {uploadingFor === sess._id ? 'Uploading...' : 'Upload Presentation Material'}
+                  </Button>
+                </div>
+              ))
+            )}
           </Card>
         </div>
 

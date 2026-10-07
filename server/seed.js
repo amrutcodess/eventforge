@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
 import { connectDB } from './config/db.js';
 import { User } from './models/User.js';
 import { Organization } from './models/Organization.js';
@@ -41,8 +40,8 @@ const seedData = async () => {
     ]);
 
     console.log('Seeding demo accounts...');
-    const hashedSecret = await bcrypt.hash('password123', 10);
-
+    // Note: passwords are hashed by the User model's pre('save') hook, so the plain
+    // value is passed straight through here.
     const admin = await User.create({
       fullName: 'Alexander Vance',
       email: 'admin@eventforge.com',
@@ -161,13 +160,15 @@ const seedData = async () => {
     });
 
     console.log('Seeding ticket categories & coupons...');
+    // quantitySold is left at 0 and driven up by the registrations created below, so
+    // the analytics endpoints and the ticket counters tell the same story.
     const vipTicket = await TicketCategory.create({
       eventId: event._id,
       name: 'VIP Executive Pass',
       description: 'Full 2-day access + Executive Lounge + Private Speaker Dinner + All Recordings',
       price: 499,
       capacity: 100,
-      quantitySold: 42,
+      quantitySold: 0,
       badgeColor: '#D4AF37'
     });
 
@@ -177,7 +178,7 @@ const seedData = async () => {
       description: 'Access to all keynote sessions, expo hall, break-out tracks, and networking lunch.',
       price: 249,
       capacity: 500,
-      quantitySold: 215,
+      quantitySold: 0,
       badgeColor: '#2D4A3E'
     });
 
@@ -187,7 +188,7 @@ const seedData = async () => {
       description: 'Exclusive entry to hands-on coding labs & technical workshops.',
       price: 149,
       capacity: 150,
-      quantitySold: 88,
+      quantitySold: 0,
       badgeColor: '#3B82F6'
     });
 
@@ -366,6 +367,191 @@ const seedData = async () => {
       sentAt: new Date()
     });
 
+    console.log('Seeding additional delegates & registrations...');
+
+    const delegateSeed = [
+      { fullName: 'Priya Raman', email: 'priya.raman@apexsystems.com', title: 'Platform Engineer', company: 'Apex Systems', interests: ['Kubernetes', 'Cloud Architecture'] },
+      { fullName: 'Tomas Weber', email: 'tomas.weber@nordcloud.io', title: 'Site Reliability Lead', company: 'NordCloud', interests: ['Observability', 'Cloud Architecture'] },
+      { fullName: 'Aisha Bello', email: 'aisha.bello@vertexbank.com', title: 'Head of Data Platform', company: 'Vertex Bank', interests: ['Data Engineering', 'Generative AI'] },
+      { fullName: 'Kenji Nakamura', email: 'kenji.nakamura@hikari.jp', title: 'Principal Architect', company: 'Hikari Systems', interests: ['Serverless', 'Event-Driven Design'] },
+      { fullName: 'Laura Mendez', email: 'laura.mendez@brightpath.es', title: 'Engineering Manager', company: 'BrightPath', interests: ['Leadership', 'DevOps'] },
+      { fullName: 'Samuel Osei', email: 'samuel.osei@accraworks.com', title: 'Security Architect', company: 'AccraWorks', interests: ['Cloud Security', 'Zero Trust'] },
+      { fullName: 'Hannah Fischer', email: 'hannah.fischer@lumen.de', title: 'ML Engineer', company: 'Lumen AI', interests: ['Generative AI', 'MLOps'] },
+      { fullName: 'Diego Alvarez', email: 'diego.alvarez@quanta.mx', title: 'Staff Engineer', company: 'Quanta Labs', interests: ['React', 'Design Systems'] },
+      { fullName: 'Mei Lin', email: 'mei.lin@orbital.sg', title: 'Director of Platform', company: 'Orbital', interests: ['Cloud Architecture', 'Scaling'] },
+      { fullName: 'Omar Haddad', email: 'omar.haddad@cedar.ae', title: 'Backend Engineer', company: 'Cedar Digital', interests: ['Node.js', 'Databases'] },
+      { fullName: 'Freya Larsson', email: 'freya.larsson@northwind.se', title: 'Product Engineer', company: 'Northwind', interests: ['Generative UI', 'Three.js'] }
+    ];
+
+    const delegates = await User.create(
+      delegateSeed.map((d) => ({ ...d, passwordHash: 'password123' }))
+    );
+
+    const daysAgo = (n) => new Date(Date.now() - n * 24 * 3600 * 1000);
+
+    // Ticket mix: attendee@eventforge.com already holds a VIP pass (created above).
+    const registrationPlan = [
+      { user: delegates[0], ticket: vipTicket, age: 11, checkedIn: true, rating: 5, comment: 'Outstanding keynote. The agentic workflow session alone was worth the trip.' },
+      { user: delegates[1], ticket: vipTicket, age: 9, checkedIn: true, rating: 4, comment: 'Great venue and smooth check-in with the QR badge.' },
+      { user: delegates[2], ticket: generalTicket, age: 10, checkedIn: true, rating: 5, comment: 'Excellent mix of strategy and hands-on content.' },
+      { user: delegates[3], ticket: generalTicket, age: 8, checkedIn: false },
+      { user: delegates[4], ticket: generalTicket, age: 7, checkedIn: true, rating: 4, comment: 'Well organised, would attend again.' },
+      { user: delegates[5], ticket: generalTicket, age: 6, checkedIn: false },
+      { user: delegates[6], ticket: generalTicket, age: 4, checkedIn: false },
+      { user: delegates[7], ticket: generalTicket, age: 3, checkedIn: false },
+      { user: delegates[8], ticket: workshopTicket, age: 5, checkedIn: true, rating: 5, comment: 'The Three.js lab was fantastic — very practical.' },
+      { user: delegates[9], ticket: workshopTicket, age: 2, checkedIn: false },
+      { user: delegates[10], ticket: workshopTicket, age: 1, checkedIn: false }
+    ];
+
+    let planIndex = 0;
+    for (const plan of registrationPlan) {
+      planIndex += 1;
+      const reg = await Registration.create({
+        eventId: event._id,
+        attendeeId: plan.user._id,
+        ticketCategoryId: plan.ticket._id,
+        orderNumber: `EF-ORD-${900000 + planIndex}`,
+        status: 'confirmed',
+        amountPaid: plan.ticket.price,
+        qrCodeToken: `EF-REG-${event._id.toString().slice(-4)}-${plan.user._id.toString().slice(-4)}-${700000 + planIndex}`,
+        checkedIn: !!plan.checkedIn,
+        checkedInAt: plan.checkedIn ? daysAgo(plan.age - 1) : undefined,
+        feedback: plan.rating
+          ? { rating: plan.rating, comment: plan.comment, submittedAt: daysAgo(Math.max(0, plan.age - 2)) }
+          : undefined
+      });
+
+      // Backdate createdAt via the raw driver so Mongoose's timestamps don't override it.
+      // This is what gives the "registrations over time" chart a real shape.
+      await Registration.collection.updateOne(
+        { _id: reg._id },
+        { $set: { createdAt: daysAgo(plan.age) } }
+      );
+    }
+
+    // Keep the ticket counters consistent with the registrations that actually exist.
+    const confirmedCountFor = (ticketId) =>
+      registrationPlan.filter((p) => p.ticket._id.equals(ticketId)).length;
+
+    await TicketCategory.updateOne({ _id: vipTicket._id }, { quantitySold: confirmedCountFor(vipTicket._id) + 1 }); // +1 for attendee@eventforge.com
+    await TicketCategory.updateOne({ _id: generalTicket._id }, { quantitySold: confirmedCountFor(generalTicket._id) });
+    await TicketCategory.updateOne({ _id: workshopTicket._id }, { quantitySold: confirmedCountFor(workshopTicket._id) });
+
+    console.log('Seeding a second event to exercise multi-event flows...');
+
+    const showcaseStart = new Date(now.getTime() + 45 * 24 * 3600 * 1000);
+    const showcaseEnd = new Date(showcaseStart.getTime() + 1 * 24 * 3600 * 1000);
+
+    const showcaseEvent = await Event.create({
+      orgId: org._id,
+      venueId: venue._id,
+      title: 'Enterprise Platform Engineering Workshop 2026',
+      slug: 'enterprise-platform-workshop-2026',
+      tagline: 'Hands-on Platform Engineering, Developer Experience & Internal Tooling',
+      description: 'A single-day, deeply practical workshop for platform teams building internal developer platforms, golden paths, and self-service infrastructure at enterprise scale.',
+      bannerImage: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=80',
+      category: 'workshop',
+      startDate: showcaseStart,
+      endDate: showcaseEnd,
+      status: 'published',
+      staff: [
+        { userId: organizer._id, role: 'organizer' },
+        { userId: staff._id, role: 'staff' }
+      ],
+      themeColor: '#2D4A3E',
+      tags: ['Platform Engineering', 'DevEx', 'Kubernetes']
+    });
+
+    const showcaseTicket = await TicketCategory.create({
+      eventId: showcaseEvent._id,
+      name: 'Workshop Seat',
+      description: 'Full-day hands-on workshop seat, including lab environment and catering.',
+      price: 199,
+      capacity: 60,
+      quantitySold: 0,
+      badgeColor: '#2D4A3E'
+    });
+
+    await TicketCategory.create({
+      eventId: showcaseEvent._id,
+      name: 'Team Bundle (4 seats)',
+      description: 'Four workshop seats booked together at a discounted team rate.',
+      price: 699,
+      capacity: 20,
+      quantitySold: 0,
+      badgeColor: '#D4AF37'
+    });
+
+    await CouponCode.create({
+      eventId: showcaseEvent._id,
+      code: 'PLATFORM10',
+      discountType: 'percentage',
+      discountValue: 10,
+      maxUses: 50,
+      usedCount: 3,
+      active: true
+    });
+
+    const showcaseSpeaker = await Speaker.create({
+      eventId: showcaseEvent._id,
+      userId: speakerUser._id,
+      name: 'Dr. Elena Rostova',
+      title: 'VP of AI Research & Neural Systems',
+      company: 'Neural Dynamics',
+      bio: 'Pioneer in multimodal foundation models and autonomous agentic workflows with 20+ patents.',
+      photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+      topicTags: ['AI Architecture', 'Platform Tooling']
+    });
+
+    await Speaker.create({
+      eventId: showcaseEvent._id,
+      name: 'Marcus Vance',
+      title: 'Chief Cloud Architect',
+      company: 'Synthetix Infrastructure',
+      bio: 'Leading distributed cloud infrastructure design and multi-region resilience for Fortune 100 brands.',
+      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      topicTags: ['Kubernetes', 'Platform Engineering']
+    });
+
+    const showcaseSessionStart = new Date(showcaseStart.getTime() + 9 * 3600 * 1000);
+    const showcaseSessionEnd = new Date(showcaseStart.getTime() + 13 * 3600 * 1000);
+
+    await Session.create({
+      eventId: showcaseEvent._id,
+      title: 'Building Golden Paths for Enterprise Platform Teams',
+      summary: 'A hands-on walkthrough of designing paved-road templates that scale across hundreds of teams.',
+      description: 'Attendees build a golden-path service template end to end, covering scaffolding, CI policy, and progressive delivery defaults.',
+      roomName: 'Workshop Suite B',
+      speakerIds: [showcaseSpeaker._id],
+      track: 'Platform Engineering',
+      startTime: showcaseSessionStart,
+      endTime: showcaseSessionEnd,
+      capacity: 60
+    });
+
+    await Registration.create({
+      eventId: showcaseEvent._id,
+      attendeeId: attendeeUser._id,
+      ticketCategoryId: showcaseTicket._id,
+      orderNumber: 'EF-ORD-910001',
+      status: 'confirmed',
+      amountPaid: 199,
+      qrCodeToken: `EF-REG-${showcaseEvent._id.toString().slice(-4)}-${attendeeUser._id.toString().slice(-4)}-660001`,
+      checkedIn: false
+    });
+
+    await TicketCategory.updateOne({ _id: showcaseTicket._id }, { quantitySold: 1 });
+
+    await Announcement.create({
+      eventId: showcaseEvent._id,
+      title: '🛠️ Workshop Lab Environments Now Provisioned',
+      content: 'Bring a laptop — your cloud lab tenancy and repository scaffolding will be pre-provisioned before the session starts.',
+      targetAudience: 'attendees',
+      priority: 'normal',
+      sentAt: new Date()
+    });
+
     console.log(`
 =====================================================
 🎉 EVENTFORGE DATABASE SEEDED SUCCESSFULLY!
@@ -378,7 +564,17 @@ Demo User Credentials (Password for all: password123):
 • Attendee:        attendee@eventforge.com
 • Sponsor:         sponsor@eventforge.com
 
-Flagship Event: "Global AI & Cloud Architecture Summit 2026"
+Events:
+1. "Global AI & Cloud Architecture Summit 2026"  (/events/global-ai-cloud-summit-2026)
+   - ${registrationPlan.length + 1} registrations across 3 ticket categories (${registrationPlan.filter((p) => p.checkedIn).length + 1} checked in)
+   - ${registrationPlan.filter((p) => p.rating).length + 1} attendee feedback submissions
+   - Attached to the organizer & staff rosters so multi-event selectors have two entries
+2. "Enterprise Platform Engineering Workshop 2026"
+   - Second event, same venue and organization — exercises the event switchers in
+     the organizer/staff dashboards and the cross-event analytics aggregations
+
+Also seeded: ${delegates.length} delegate accounts (<name>@<company>.com, same password),
+sponsorship packages + deliverables, coupons, announcements, sessions and attendance.
 =====================================================
     `);
 

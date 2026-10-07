@@ -26,6 +26,8 @@ export const Landing = () => {
     }
   };
 
+  const featuredEvent = events[0];
+
   const tickerItems = [
     "GLOBAL AI & CLOUD SUMMIT 2026",
     "98.4% VERIFIED ON-SITE CHECK-IN",
@@ -71,7 +73,7 @@ export const Landing = () => {
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link to="/events/global-ai-cloud-summit-2026">
+                <Link to={featuredEvent ? `/events/${featuredEvent.slug}` : '/#featured-events'}>
                   <Button size="lg" variant="primary">
                     Explore Flagship Summit
                   </Button>
@@ -171,7 +173,7 @@ export const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             
-            <Card className="hover:border-emerald-400/50">
+            <Card dark className="hover:border-emerald-400/50">
               <div className="w-12 h-12 rounded-2xl bg-forge-accent/40 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mb-6 shadow-forge-glow">
                 <Zap className="w-6 h-6" />
               </div>
@@ -181,7 +183,7 @@ export const Landing = () => {
               </p>
             </Card>
 
-            <Card className="hover:border-emerald-400/50">
+            <Card dark className="hover:border-emerald-400/50">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mb-6">
                 <ShieldCheck className="w-6 h-6" />
               </div>
@@ -191,7 +193,7 @@ export const Landing = () => {
               </p>
             </Card>
 
-            <Card className="hover:border-emerald-400/50">
+            <Card dark className="hover:border-emerald-400/50">
               <div className="w-12 h-12 rounded-2xl bg-forge-gold/20 border border-forge-gold/40 text-amber-300 flex items-center justify-center mb-6">
                 <Sparkles className="w-6 h-6" />
               </div>
@@ -208,7 +210,7 @@ export const Landing = () => {
 
 
       {/* FEATURED EVENTS SHOWCASE */}
-      <section className="py-24 relative">
+      <section id="featured-events" className="py-24 relative scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
@@ -218,11 +220,11 @@ export const Landing = () => {
                 Featured Global Conferences
               </h2>
             </div>
-            <Link to="/events/global-ai-cloud-summit-2026">
+            <a href="#featured-events">
               <Button variant="ghost" size="sm" className="mt-4 md:mt-0 text-emerald-300">
                 View All Summits
               </Button>
-            </Link>
+            </a>
           </div>
 
           {loading ? (
@@ -233,7 +235,7 @@ export const Landing = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {events.map((evt) => (
-                <Card key={evt._id} className="p-0 border border-white/15 overflow-hidden group hover:border-emerald-400/50 transition-all">
+                <Card dark key={evt._id} className="p-0 border border-white/15 overflow-hidden group hover:border-emerald-400/50 transition-all">
                   <div className="relative h-64 overflow-hidden">
                     <img
                       src={evt.bannerImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80'}

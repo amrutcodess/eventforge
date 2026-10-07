@@ -142,6 +142,27 @@ router.post('/:eventId/sessions/:sessionId/check-in', protect, requireEventRole(
   }
 });
 
+// POST /api/events/:eventId/sessions/:sessionId/resources — Attach presentation material
+// Speakers may attach their own decks; organizers may attach on any session.
+router.post('/:eventId/sessions/:sessionId/resources', protect, requireEventRole(['organizer', 'speaker']), async (req, res, next) => {
+  try {
+    const { title, url, fileType } = req.body;
+    if (!title || !url) {
+      return res.status(400).json({ error: 'title and url are required' });
+    }
+
+    const session = await Session.findById(req.params.sessionId);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    session.resources.push({ title, url, fileType: fileType || '' });
+    await session.save();
+
+    res.status(201).json(session);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/events/:eventId/sessions/:sessionId/attendance — View attendance list
 router.get('/:eventId/sessions/:sessionId/attendance', protect, requireEventRole(['organizer', 'staff', 'speaker']), async (req, res, next) => {
   try {

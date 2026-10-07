@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
+import { Organization } from '../models/Organization.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -27,4 +28,41 @@ export const requireGlobalAdmin = (req, res, next) => {
     return next();
   }
   return res.status(403).json({ error: 'Access denied: Requires Platform Admin role' });
+};
+
+/**
+ * Gate for platform-level resources (creating events and venues).
+ *
+ * There is deliberately no global "organizer" role in this system — organizer status is
+ * scoped to an event (Event.staff) or to an organization (Organization.ownerId/members).
+ * So this allows platform admins plus anyone who owns or belongs to an organization,
+ * which is what actually distinguishes an organizer from a plain attendee.
+ */
+export const requireOrganizerOrAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (req.user.globalRole === 'admin') {
+      return next();
+    }
+
+    const membership = await Organization.findOne({
+      $or: [
+        { ownerId: req.user._id },
+        { 'members.userId': req.user._id }
+      ]
+    }).select('_id');
+
+    if (membership) {
+      return next();
+    }
+
+    return res.status(403).json({
+      error: 'Access denied: Requires an Event Organizer account (organization owner or member)'
+    });
+  } catch (err) {
+    next(err);
+  }
 };

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { QrCode, Sparkles, Star, Calendar, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { QrCode, Sparkles, Star, Calendar, MapPin, CheckCircle, Clock, User } from 'lucide-react';
 import api from '../utils/api';
 
 export const TicketPass = () => {

@@ -2,11 +2,39 @@ import express from 'express';
 import { Registration } from '../models/Registration.js';
 import { TicketCategory } from '../models/TicketCategory.js';
 import { CouponCode } from '../models/CouponCode.js';
+import { Session } from '../models/Session.js';
 import { generateQRCodeDataURI } from '../utils/qrGenerator.js';
 import { protect } from '../middleware/auth.js';
 import { requireEventRole } from '../middleware/eventAuth.js';
 
 const router = express.Router();
+
+const REGISTRATION_STATUSES = ['pending', 'approved', 'confirmed', 'cancelled', 'waitlisted'];
+
+/**
+ * Promote the earliest waitlisted registration for a ticket category once a seat frees up.
+ * Called when a confirmed registration is cancelled or moved off "confirmed".
+ */
+const promoteFromWaitlist = async (eventId, ticketCategoryId) => {
+  const ticket = await TicketCategory.findById(ticketCategoryId);
+  if (!ticket || ticket.quantitySold >= ticket.capacity) return null;
+
+  const nextInLine = await Registration.findOne({
+    eventId,
+    ticketCategoryId,
+    status: 'waitlisted'
+  }).sort({ createdAt: 1 });
+
+  if (!nextInLine) return null;
+
+  nextInLine.status = 'confirmed';
+  await nextInLine.save();
+
+  ticket.quantitySold += 1;
+  await ticket.save();
+
+  return nextInLine;
+};
 
 // GET /api/registrations/my-all — Logged in user's registrations across all events
 router.get('/my-all', protect, async (req, res, next) => {
@@ -153,10 +181,52 @@ router.get('/:eventId/registrations', protect, requireEventRole(['organizer', 's
 router.put('/:eventId/registrations/:id/status', protect, requireEventRole(['organizer', 'staff']), async (req, res, next) => {
   try {
     const { status } = req.body;
+
+    if (!REGISTRATION_STATUSES.includes(status)) {
+      return res.status(400).json({
+        error: `Invalid status "${status}". Expected one of: ${REGISTRATION_STATUSES.join(', ')}`
+      });
+    }
+
     const registration = await Registration.findById(req.params.id);
     if (!registration) return res.status(404).json({ error: 'Registration not found' });
 
+    const previousStatus = registration.status;
     registration.status = status;
+    await registration.save();
+
+    // Capacity bookkeeping: releasing a confirmed seat frees it for the waitlist.
+    if (previousStatus === 'confirmed' && status !== 'confirmed') {
+      await TicketCategory.updateOne(
+        { _id: registration.ticketCategoryId, quantitySold: { $gt: 0 } },
+        { $inc: { quantitySold: -1 } }
+      );
+      await promoteFromWaitlist(registration.eventId, registration.ticketCategoryId);
+    }
+
+    res.json(registration);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/events/:eventId/registrations/:id/check-in — Manual entrance check-in toggle (Organizer / Staff)
+router.put('/:eventId/registrations/:id/check-in', protect, requireEventRole(['organizer', 'staff']), async (req, res, next) => {
+  try {
+    const registration = await Registration.findById(req.params.id);
+    if (!registration) return res.status(404).json({ error: 'Registration not found' });
+
+    // Defaults to toggling; callers may pass an explicit target state.
+    const checkedIn = req.body.checkedIn === undefined ? !registration.checkedIn : !!req.body.checkedIn;
+
+    if (checkedIn && registration.status !== 'confirmed') {
+      return res.status(400).json({
+        error: `Cannot check in. Registration status is ${registration.status}`
+      });
+    }
+
+    registration.checkedIn = checkedIn;
+    registration.checkedInAt = checkedIn ? new Date() : undefined;
     await registration.save();
 
     res.json(registration);
@@ -201,6 +271,54 @@ router.post('/:eventId/check-in', protect, requireEventRole(['organizer', 'staff
       message: `Check-in successful for ${registration.attendeeId.fullName}`,
       registration
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/events/:eventId/my-sessions — Sessions the current attendee has selected
+router.get('/:eventId/my-sessions', protect, async (req, res, next) => {
+  try {
+    const registration = await Registration.findOne({
+      eventId: req.params.eventId,
+      attendeeId: req.user._id
+    }).populate({
+      path: 'attendeeSelections',
+      populate: { path: 'speakerIds', select: 'name title company photoUrl' }
+    });
+
+    if (!registration) return res.status(404).json({ error: 'Registration not found' });
+
+    res.json(registration.attendeeSelections || []);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/events/:eventId/my-sessions — Replace the attendee's session selection
+router.put('/:eventId/my-sessions', protect, async (req, res, next) => {
+  try {
+    const { sessionIds } = req.body;
+    if (!Array.isArray(sessionIds)) {
+      return res.status(400).json({ error: 'sessionIds must be an array' });
+    }
+
+    const registration = await Registration.findOne({
+      eventId: req.params.eventId,
+      attendeeId: req.user._id
+    });
+    if (!registration) return res.status(404).json({ error: 'Registration not found' });
+
+    // Only accept sessions that actually belong to this event.
+    const validSessions = await Session.find({
+      _id: { $in: sessionIds },
+      eventId: req.params.eventId
+    }).select('_id');
+
+    registration.attendeeSelections = validSessions.map((s) => s._id);
+    await registration.save();
+
+    res.json(registration.attendeeSelections);
   } catch (err) {
     next(err);
   }

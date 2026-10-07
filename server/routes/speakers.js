@@ -1,9 +1,34 @@
 import express from 'express';
 import { Speaker } from '../models/Speaker.js';
+import { Session } from '../models/Session.js';
 import { protect } from '../middleware/auth.js';
 import { requireEventRole } from '../middleware/eventAuth.js';
 
 const router = express.Router();
+
+// GET /api/speakers/me — The signed-in speaker's profile(s) and assigned sessions
+router.get('/me', protect, async (req, res, next) => {
+  try {
+    const speakerProfiles = await Speaker.find({ userId: req.user._id }).populate(
+      'eventId',
+      'title slug startDate endDate bannerImage themeColor venueId'
+    );
+
+    const speakerIds = speakerProfiles.map((s) => s._id);
+    const eventIds = speakerProfiles.map((s) => s.eventId?._id).filter(Boolean);
+
+    const sessions = await Session.find({
+      eventId: { $in: eventIds },
+      speakerIds: { $in: speakerIds }
+    })
+      .populate('eventId', 'title slug')
+      .sort({ startTime: 1 });
+
+    res.json({ speakerProfiles, sessions });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/events/:eventId/speakers
 router.get('/:eventId/speakers', async (req, res, next) => {

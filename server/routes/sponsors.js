@@ -6,6 +6,19 @@ import { requireEventRole } from '../middleware/eventAuth.js';
 
 const router = express.Router();
 
+// GET /api/sponsors/me — The signed-in sponsor's sponsorships, packages and deliverables
+router.get('/me', protect, async (req, res, next) => {
+  try {
+    const sponsorships = await Sponsor.find({ userId: req.user._id })
+      .populate('packageId')
+      .populate('eventId', 'title slug startDate endDate bannerImage themeColor');
+
+    res.json(sponsorships);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/events/:eventId/sponsors
 router.get('/:eventId/sponsors', async (req, res, next) => {
   try {

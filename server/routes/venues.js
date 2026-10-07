@@ -1,6 +1,6 @@
 import express from 'express';
 import { Venue } from '../models/Venue.js';
-import { protect } from '../middleware/auth.js';
+import { protect, requireOrganizerOrAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/venues (Organizer / Admin)
-router.post('/', protect, async (req, res, next) => {
+router.post('/', protect, requireOrganizerOrAdmin, async (req, res, next) => {
   try {
     const { name, address, city, country, rooms } = req.body;
     const venue = await Venue.create({
@@ -42,8 +42,8 @@ router.post('/', protect, async (req, res, next) => {
   }
 });
 
-// PUT /api/venues/:id
-router.put('/:id', protect, async (req, res, next) => {
+// PUT /api/venues/:id (Organizer / Admin)
+router.put('/:id', protect, requireOrganizerOrAdmin, async (req, res, next) => {
   try {
     const venue = await Venue.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(venue);

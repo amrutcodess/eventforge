@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from './Button';
 import { Badge } from './Badge';
-import { Shield, Sparkles, Layers, QrCode, ChevronDown, LogOut } from 'lucide-react';
+import { Shield, Sparkles, Layers, ChevronDown, LogOut } from 'lucide-react';
 
-export const Navbar = ({ onOpenQRScanner }) => {
+export const Navbar = () => {
   const { user, login, logout } = useAuth();
   const navigate = useNavigate();
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -51,7 +51,6 @@ export const Navbar = ({ onOpenQRScanner }) => {
         {/* Links Center */}
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wide text-slate-300">
           <Link to="/" className="hover:text-emerald-400 transition-colors">Discover Summits</Link>
-          <Link to="/events/global-ai-cloud-summit-2026" className="hover:text-emerald-400 transition-colors">Flagship Agenda</Link>
           {user && (
             <Link to="/dashboard" className="hover:text-emerald-400 transition-colors flex items-center gap-2 text-emerald-300 font-bold">
               <Sparkles className="w-4 h-4 text-forge-gold animate-pulse" />
@@ -62,18 +61,6 @@ export const Navbar = ({ onOpenQRScanner }) => {
 
         {/* CTA Right & Quick Role Switcher */}
         <div className="flex items-center gap-3">
-          
-          {/* Staff Quick QR Scanner Trigger */}
-          {user && onOpenQRScanner && (
-            <button
-              onClick={onOpenQRScanner}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-forge-accent/40 border border-emerald-500/50 rounded-full hover:bg-forge-accent/70 transition-colors shadow-forge-glow"
-              title="Launch QR Ticket Scanner"
-            >
-              <QrCode className="w-4 h-4 text-emerald-400" />
-              <span>QR Scanner</span>
-            </button>
-          )}
 
           {/* Demo Role Switcher Dropdown */}
           <div className="relative">

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
-import { Calendar, MapPin, Clock, Ticket, User, Check, Sparkles, Tag, ShieldCheck, FileText } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, User, Check, Sparkles, Tag, ShieldCheck, FileText, Megaphone } from 'lucide-react';
 import api from '../utils/api';
 
 export const EventDetail = () => {
@@ -16,6 +16,12 @@ export const EventDetail = () => {
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('agenda');
+  const [announcements, setAnnouncements] = useState([]);
+
+  // Attendee session selection
+  const [selectedSessionIds, setSelectedSessionIds] = useState([]);
+  const [selectionsLoaded, setSelectionsLoaded] = useState(false);
+  const [selectionError, setSelectionError] = useState('');
 
   // Checkout Modal state
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -32,12 +38,57 @@ export const EventDetail = () => {
 
   const fetchEventDetails = async () => {
     try {
-      const res = await api.get(`/events/${slug || 'global-ai-cloud-summit-2026'}`);
+      const res = await api.get(`/events/${slug}`);
       setEventData(res.data);
+      fetchAnnouncements(res.data.event._id);
+
+      if (res.data.userPermissions?.isAttendee) {
+        fetchMySessions(res.data.event._id);
+      }
     } catch (err) {
       console.error('Failed to load event:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAnnouncements = async (eventId) => {
+    try {
+      const res = await api.get(`/events/${eventId}/announcements`);
+      setAnnouncements(res.data || []);
+    } catch (err) {
+      console.error('Failed to load announcements:', err);
+    }
+  };
+
+  const fetchMySessions = async (eventId) => {
+    try {
+      const res = await api.get(`/events/${eventId}/my-sessions`);
+      setSelectedSessionIds((res.data || []).map((s) => s._id || s));
+    } catch (err) {
+      // A 404 here just means the attendee has not selected any sessions yet.
+      console.debug('No session selection yet:', err?.response?.status);
+    } finally {
+      setSelectionsLoaded(true);
+    }
+  };
+
+  const toggleSessionSelection = async (sessionId) => {
+    if (!eventData?.event?._id) return;
+
+    const next = selectedSessionIds.includes(sessionId)
+      ? selectedSessionIds.filter((id) => id !== sessionId)
+      : [...selectedSessionIds, sessionId];
+
+    const previous = selectedSessionIds;
+    setSelectedSessionIds(next);
+    setSelectionError('');
+
+    try {
+      await api.put(`/events/${eventData.event._id}/my-sessions`, { sessionIds: next });
+    } catch (err) {
+      setSelectedSessionIds(previous);
+      setSelectionError(err.response?.data?.error || 'Could not save your session selection.');
     }
   };
 
@@ -173,6 +224,33 @@ export const EventDetail = () => {
         </div>
       </section>
 
+      {/* ORGANIZER ANNOUNCEMENTS */}
+      {announcements.length > 0 && (
+        <section className="bg-forge-warmGrey/60 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-3">
+            {announcements.slice(0, 3).map((ann) => (
+              <div
+                key={ann._id}
+                className="flex items-start gap-3 bg-white rounded-2xl border border-slate-200 p-4"
+              >
+                <Megaphone
+                  className={`w-5 h-5 shrink-0 mt-0.5 ${
+                    ann.priority === 'urgent' ? 'text-rose-500' : 'text-forge-accent'
+                  }`}
+                />
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-serif font-bold text-sm text-slate-900">{ann.title}</h3>
+                    {ann.priority === 'urgent' && <Badge variant="danger">URGENT</Badge>}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{ann.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* NAVIGATION TABS */}
       <section className="sticky top-20 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -221,7 +299,19 @@ export const EventDetail = () => {
         {/* AGENDA / SESSIONS TAB */}
         {activeTab === 'agenda' && (
           <div className="space-y-6 max-w-4xl">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 mb-6">Summit Program & Masterclasses</h2>
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-slate-900">Summit Program & Masterclasses</h2>
+              {userPermissions?.isAttendee && (
+                <p className="text-xs text-slate-500 mt-1">
+                  {selectedSessionIds.length > 0
+                    ? `You have ${selectedSessionIds.length} session${selectedSessionIds.length === 1 ? '' : 's'} in your personal schedule.`
+                    : 'Add sessions to your personal schedule to build your agenda.'}
+                </p>
+              )}
+              {selectionError && (
+                <p className="text-xs text-rose-600 font-medium mt-1">{selectionError}</p>
+              )}
+            </div>
             
             {sessions && sessions.length > 0 ? (
               sessions.map((sess) => (
@@ -234,11 +324,27 @@ export const EventDetail = () => {
                       </div>
                       <h3 className="font-serif text-xl font-bold text-slate-900">{sess.title}</h3>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-forge-warmGrey px-4 py-2 rounded-full shrink-0">
-                      <Clock className="w-4 h-4 text-forge-accent" />
-                      <span>
-                        {new Date(sess.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(sess.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-forge-warmGrey px-4 py-2 rounded-full">
+                        <Clock className="w-4 h-4 text-forge-accent" />
+                        <span>
+                          {new Date(sess.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(sess.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+
+                      {userPermissions?.isAttendee && (
+                        <button
+                          onClick={() => toggleSessionSelection(sess._id)}
+                          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-colors ${
+                            selectedSessionIds.includes(sess._id)
+                              ? 'bg-forge-accent text-white'
+                              : 'bg-white border border-slate-200 text-slate-600 hover:border-forge-accent'
+                          }`}
+                        >
+                          {selectedSessionIds.includes(sess._id) && <Check className="w-3.5 h-3.5" />}
+                          {selectedSessionIds.includes(sess._id) ? 'In My Schedule' : 'Add to Schedule'}
+                        </button>
+                      )}
                     </div>
                   </div>
 

@@ -14,6 +14,9 @@ const registrationSchema = new mongoose.Schema({
     email: { type: String, default: '' }
   }],
   qrCodeToken: { type: String, required: true, unique: true },
+  // Sessions the attendee has chosen to attend. Populated from the event agenda; used
+  // for personalised scheduling and to seed the AI recommendation engine.
+  attendeeSelections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Session' }],
   checkedIn: { type: Boolean, default: false },
   checkedInAt: { type: Date },
   feedback: {

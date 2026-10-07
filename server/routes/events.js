@@ -6,7 +6,7 @@ import { Speaker } from '../models/Speaker.js';
 import { Session } from '../models/Session.js';
 import { Sponsor } from '../models/Sponsor.js';
 import { SponsorPackage } from '../models/SponsorPackage.js';
-import { protect } from '../middleware/auth.js';
+import { protect, requireOrganizerOrAdmin } from '../middleware/auth.js';
 import { requireEventRole, getEventPermissions } from '../middleware/eventAuth.js';
 
 const router = express.Router();
@@ -114,8 +114,8 @@ router.get('/:slugOrId', async (req, res, next) => {
   }
 });
 
-// POST /api/events — Create Event (Organizer)
-router.post('/', protect, async (req, res, next) => {
+// POST /api/events — Create Event (Organizer / Admin)
+router.post('/', protect, requireOrganizerOrAdmin, async (req, res, next) => {
   try {
     const { orgId, venueId, title, tagline, description, bannerImage, category, startDate, endDate, themeColor, tags } = req.body;
     
