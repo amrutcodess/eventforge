@@ -1,24 +1,36 @@
 import React from 'react';
 
+const RADII = {
+  none: 'rounded-none',
+  sm: 'rounded-sm',
+  md: 'rounded-md',
+  lg: 'rounded-lg'
+};
+
+/**
+ * `radius` is an explicit prop rather than something callers override with a
+ * `className`, because two conflicting rounded-* utilities resolve by stylesheet order,
+ * not by the order they appear in the class attribute.
+ *
+ * Separation comes from a hairline and a background change; there is no lift and no glow.
+ */
 export const Card = ({
   children,
   className = '',
   dark = false,
-  hover = true
+  hover = true,
+  radius = 'md',
+  padded = true
 }) => {
   const themeStyles = dark
-    ? 'bg-forge-darkCard/90 text-white border border-forge-darkBorder backdrop-blur-xl shadow-glass-card'
-    : 'bg-white/95 text-slate-900 border border-slate-200 shadow-forge-card';
+    ? 'bg-night-raised text-white border border-night-line'
+    : 'bg-surface text-ink border border-line';
 
-  const hoverStyles = hover
-    ? dark
-      ? 'hover:-translate-y-1.5 hover:border-forge-accent/50 hover:shadow-forge-glow'
-      : 'hover:-translate-y-1.5 hover:border-forge-accent/40 hover:shadow-forge-soft'
-    : '';
+  const hoverStyles = hover ? 'transition-colors hover:border-line-strong' : '';
 
   return (
     <div
-      className={`rounded-3xl p-6 transition-all duration-400 ${themeStyles} ${hoverStyles} ${className}`}
+      className={`${RADII[radius] || RADII.md} ${padded ? 'p-6' : ''} ${themeStyles} ${hoverStyles} ${className}`}
     >
       {children}
     </div>

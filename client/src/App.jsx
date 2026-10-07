@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/ui/Navbar';
 import { Footer } from './components/ui/Footer';
+import { SmoothScroll } from './components/motion/SmoothScroll';
+import { ScrollToTop } from './components/motion/ScrollToTop';
 
 import { Landing } from './pages/Landing';
 import { EventDetail } from './pages/EventDetail';
@@ -17,8 +19,8 @@ const RequireAuth = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-forge-bg flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-forge-accent border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -30,7 +32,9 @@ export function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen bg-forge-bg text-slate-900 font-sans">
+        <SmoothScroll />
+        <ScrollToTop />
+        <div className="flex flex-col min-h-screen bg-canvas text-ink font-sans">
           <Navbar />
 
           <div className="flex-1">

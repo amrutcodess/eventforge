@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
-import { Calendar, MapPin, Clock, Ticket, User, Check, Sparkles, Tag, ShieldCheck, FileText, Megaphone } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, Check, ShieldCheck, FileText, Megaphone } from 'lucide-react';
 import api from '../utils/api';
 
 export const EventDetail = () => {
@@ -133,17 +133,17 @@ export const EventDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-forge-bg flex items-center justify-center p-8">
-        <div className="w-12 h-12 rounded-full border-4 border-forge-accent border-t-transparent animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-canvas p-8">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
 
   if (!eventData?.event) {
     return (
-      <div className="min-h-screen bg-forge-bg flex flex-col items-center justify-center p-8">
-        <h2 className="font-serif text-3xl font-bold">Event Not Found</h2>
-        <Button className="mt-4" onClick={() => navigate('/')}>Return to Events</Button>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-canvas p-8">
+        <h2 className="font-display text-display uppercase text-ink">Event not found</h2>
+        <Button className="mt-6" onClick={() => navigate('/')}>Return to Events</Button>
       </div>
     );
   }
@@ -164,86 +164,86 @@ export const EventDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-forge-bg text-slate-900 font-sans pb-24">
-      
-      {/* EVENT HERO SECTION */}
-      <section className="relative bg-forge-dark text-white overflow-hidden py-16 border-b border-forge-darkBorder">
-        <div className="absolute inset-0 opacity-25">
+    <div className="min-h-screen bg-canvas pb-24 text-ink">
+      {/* ── EVENT HERO — dark band ── */}
+      <section className="relative overflow-hidden bg-night py-20 text-white md:py-28">
+        {/* The banner was previously dimmed three times over — opacity-20 *and* blur-sm
+            *and* a heavy gradient — which left the photograph contributing ~8% brightness,
+            i.e. an unreadable smudge. One dimmer is enough: a moderate opacity with a
+            gradient that only goes dark where the headline actually sits. */}
+        <div className="absolute inset-0 opacity-50">
           <img
             src={event.bannerImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=80'}
             alt={event.title}
-            className="w-full h-full object-cover filter blur-sm scale-105"
+            className="h-full w-full object-cover"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-forge-dark via-forge-dark/80 to-forge-dark/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-night via-night/85 to-night/35" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          
-          <div className="max-w-3xl space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
+        <div className="gutter relative">
+          <div className="max-w-3xl">
+            <div className="flex flex-wrap items-center gap-4">
               <Badge variant="accent">{event.category.toUpperCase()}</Badge>
-              <span className="text-xs text-forge-gold font-bold tracking-widest uppercase">
+              <span className="eyebrow text-white/50">
                 {event.orgId?.name || 'Nexus Enterprise'}
               </span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
+            <h1 className="mt-6 font-display text-display uppercase leading-none text-white">
               {event.title}
             </h1>
 
-            <p className="text-lg text-slate-300 font-normal leading-relaxed">
+            <p className="mt-6 max-w-2xl text-body-lg text-white/70">
               {event.tagline || event.description}
             </p>
 
-            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-300 pt-4 border-t border-slate-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-forge-gold" />
-                <span>
-                  {new Date(event.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {new Date(event.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-emerald-400" />
-                <span>{event.venueId?.name}, {event.venueId?.city}</span>
-              </div>
+            <div className="mt-8 flex flex-wrap items-center gap-8 border-t border-night-line pt-6 text-sm text-white/70">
+              <span className="inline-flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-accent" />
+                {new Date(event.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} –{' '}
+                {new Date(event.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-accent" />
+                {event.venueId?.name}, {event.venueId?.city}
+              </span>
             </div>
 
             {userPermissions?.isAttendee && (
-              <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2 font-semibold">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  <span>You have a confirmed registration pass for this summit!</span>
-                </div>
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-md bg-success-soft p-4 text-xs text-success">
+                <span className="inline-flex items-center gap-2 font-semibold">
+                  <ShieldCheck className="h-5 w-5" />
+                  You have a confirmed registration pass for this summit.
+                </span>
                 <Button size="sm" variant="primary" onClick={() => navigate('/ticket-pass/my')}>
-                  View Badge & QR Pass
+                  View Badge &amp; QR Pass
                 </Button>
               </div>
             )}
           </div>
-
         </div>
       </section>
 
-      {/* ORGANIZER ANNOUNCEMENTS */}
+      {/* ── ANNOUNCEMENTS — light band ── */}
       {announcements.length > 0 && (
-        <section className="bg-forge-warmGrey/60 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-3">
+        <section className="bg-canvas">
+          <div className="gutter space-y-3 py-8">
             {announcements.slice(0, 3).map((ann) => (
               <div
                 key={ann._id}
-                className="flex items-start gap-3 bg-white rounded-2xl border border-slate-200 p-4"
+                className="flex items-start gap-3 rounded-md border border-line bg-surface p-4"
               >
                 <Megaphone
-                  className={`w-5 h-5 shrink-0 mt-0.5 ${
-                    ann.priority === 'urgent' ? 'text-rose-500' : 'text-forge-accent'
+                  className={`mt-0.5 h-5 w-5 shrink-0 ${
+                    ann.priority === 'urgent' ? 'text-danger' : 'text-accent'
                   }`}
                 />
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-serif font-bold text-sm text-slate-900">{ann.title}</h3>
-                    {ann.priority === 'urgent' && <Badge variant="danger">URGENT</Badge>}
+                    <h3 className="text-sm font-semibold text-ink">{ann.title}</h3>
+                    {ann.priority === 'urgent' && <Badge variant="danger">Urgent</Badge>}
                   </div>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{ann.content}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">{ann.content}</p>
                 </div>
               </div>
             ))}
@@ -251,12 +251,11 @@ export const EventDetail = () => {
         </section>
       )}
 
-      {/* NAVIGATION TABS */}
-      <section className="sticky top-20 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            
-            <div className="flex gap-8 text-sm font-semibold">
+      {/* ── TAB BAR. `top-20` is coupled to the Navbar's `h-20` — keep them in sync. ── */}
+      <section className="sticky top-20 z-30 border-b border-line bg-canvas">
+        <div className="gutter">
+          <div className="flex items-center justify-between gap-6">
+            <div className="no-scrollbar flex min-w-0 gap-6 overflow-x-auto whitespace-nowrap text-sm font-medium">
               {[
                 { id: 'agenda', label: `Session Schedule (${sessions?.length || 0})` },
                 { id: 'speakers', label: `Keynote Speakers (${speakers?.length || 0})` },
@@ -266,10 +265,10 @@ export const EventDetail = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 border-b-2 transition-colors ${
+                  className={`border-b-2 py-4 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-forge-accent text-forge-accent'
-                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                      ? 'border-accent text-accent'
+                      : 'border-transparent text-ink-muted hover:text-ink'
                   }`}
                 >
                   {tab.label}
@@ -277,103 +276,112 @@ export const EventDetail = () => {
               ))}
             </div>
 
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                if (tickets?.length > 0) setSelectedTicket(tickets[0]);
-                setCheckoutModalOpen(true);
-              }}
-            >
-              Get Tickets Now
-            </Button>
-
+            <div className="shrink-0 py-3">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  if (tickets?.length > 0) setSelectedTicket(tickets[0]);
+                  setCheckoutModalOpen(true);
+                }}
+              >
+                Get Tickets
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-
-      {/* MAIN CONTENT AREA */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        {/* AGENDA / SESSIONS TAB */}
+      {/* ── MAIN CONTENT ── */}
+      <main className="gutter py-16">
+        {/* AGENDA */}
         {activeTab === 'agenda' && (
-          <div className="space-y-6 max-w-4xl">
+          <div className="max-w-4xl space-y-6">
             <div>
-              <h2 className="font-serif text-2xl font-bold text-slate-900">Summit Program & Masterclasses</h2>
+              <h2 className="text-h2 font-bold tracking-tight text-ink">
+                Summit program &amp; masterclasses
+              </h2>
               {userPermissions?.isAttendee && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="mt-2 text-xs text-ink-muted">
                   {selectedSessionIds.length > 0
                     ? `You have ${selectedSessionIds.length} session${selectedSessionIds.length === 1 ? '' : 's'} in your personal schedule.`
                     : 'Add sessions to your personal schedule to build your agenda.'}
                 </p>
               )}
               {selectionError && (
-                <p className="text-xs text-rose-600 font-medium mt-1">{selectionError}</p>
+                <p className="mt-2 text-xs font-medium text-danger">{selectionError}</p>
               )}
             </div>
-            
+
             {sessions && sessions.length > 0 ? (
               sessions.map((sess) => (
-                <Card key={sess._id} className="p-6 border border-slate-200 hover:border-forge-accent/40">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <Card key={sess._id} className="p-6">
+                  <div className="flex flex-col justify-between gap-4 border-b border-line pb-4 md:flex-row md:items-center">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="mb-2 flex items-center gap-3">
                         <Badge variant="accent">{sess.track.toUpperCase()}</Badge>
-                        <span className="text-xs text-slate-500 font-medium">Room: {sess.roomName}</span>
+                        <span className="text-xs text-ink-muted">Room: {sess.roomName}</span>
                       </div>
-                      <h3 className="font-serif text-xl font-bold text-slate-900">{sess.title}</h3>
+                      <h3 className="text-h3 font-semibold text-ink">{sess.title}</h3>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-forge-warmGrey px-4 py-2 rounded-full">
-                        <Clock className="w-4 h-4 text-forge-accent" />
-                        <span>
-                          {new Date(sess.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(sess.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-sm bg-canvas px-4 py-2 text-xs font-semibold text-ink-muted">
+                        <Clock className="h-4 w-4 text-accent" />
+                        {new Date(sess.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –{' '}
+                        {new Date(sess.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
 
                       {userPermissions?.isAttendee && (
                         <button
                           onClick={() => toggleSessionSelection(sess._id)}
-                          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-colors ${
+                          className={`inline-flex items-center gap-1.5 rounded-none px-4 py-2 text-xs font-semibold transition-colors ${
                             selectedSessionIds.includes(sess._id)
-                              ? 'bg-forge-accent text-white'
-                              : 'bg-white border border-slate-200 text-slate-600 hover:border-forge-accent'
+                              ? 'bg-accent text-white'
+                              : 'border border-line-strong text-ink-muted hover:border-ink hover:text-ink'
                           }`}
                         >
-                          {selectedSessionIds.includes(sess._id) && <Check className="w-3.5 h-3.5" />}
+                          {selectedSessionIds.includes(sess._id) && <Check className="h-3.5 w-3.5" />}
                           {selectedSessionIds.includes(sess._id) ? 'In My Schedule' : 'Add to Schedule'}
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-600 my-4 leading-relaxed">{sess.summary || sess.description}</p>
+                  <p className="my-4 text-xs leading-relaxed text-ink-muted">
+                    {sess.summary || sess.description}
+                  </p>
 
-                  {/* Speakers Row */}
                   {sess.speakerIds && sess.speakerIds.length > 0 && (
-                    <div className="pt-2 flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
                       {sess.speakerIds.map((spk) => (
-                        <div key={spk._id} className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full">
+                        <div
+                          key={spk._id}
+                          className="flex items-center gap-2 rounded-sm border border-line bg-canvas px-3 py-1.5"
+                        >
                           <img
                             src={spk.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                             alt={spk.name}
-                            className="w-6 h-6 rounded-full object-cover"
+                            className="h-6 w-6 rounded-full object-cover"
                           />
-                          <span className="text-xs font-bold text-slate-800">{spk.name}</span>
-                          <span className="text-[10px] text-slate-400">({spk.company})</span>
+                          <span className="text-xs font-semibold text-ink">{spk.name}</span>
+                          <span className="text-[10px] text-ink-muted">({spk.company})</span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Resource Files */}
                   {sess.resources && sess.resources.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-forge-accent" />
-                      <span className="text-xs text-slate-500 font-medium">Session Downloads:</span>
+                    <div className="mt-4 flex items-center gap-3 border-t border-line pt-3">
+                      <FileText className="h-4 w-4 text-accent" />
+                      <span className="text-xs text-ink-muted">Session downloads:</span>
                       {sess.resources.map((res, rIdx) => (
-                        <a key={rIdx} href={res.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-forge-accent hover:underline">
+                        <a
+                          key={rIdx}
+                          href={res.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-accent hover:underline"
+                        >
                           {res.title}
                         </a>
                       ))}
@@ -382,30 +390,35 @@ export const EventDetail = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No sessions published yet.</p>
+              <p className="text-sm text-ink-muted">No sessions published yet.</p>
             )}
           </div>
         )}
 
-        {/* SPEAKERS TAB */}
+        {/* SPEAKERS */}
         {activeTab === 'speakers' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {speakers && speakers.length > 0 ? (
               speakers.map((spk) => (
-                <Card key={spk._id} className="p-6 text-center border border-slate-200">
+                <Card key={spk._id} className="p-6 text-center">
                   <img
                     src={spk.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
                     alt={spk.name}
-                    className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-2 border-forge-accent shadow-forge-soft"
+                    className="mx-auto mb-4 h-24 w-24 rounded-full border-2 border-accent object-cover"
                   />
-                  <h3 className="font-serif text-xl font-bold text-slate-900">{spk.name}</h3>
-                  <p className="text-xs font-semibold text-forge-accent mt-0.5">{spk.title}</p>
-                  <p className="text-xs text-slate-500">{spk.company}</p>
-                  <p className="text-xs text-slate-600 my-4 line-clamp-3 leading-relaxed">{spk.bio}</p>
+                  <h3 className="text-h3 font-semibold text-ink">{spk.name}</h3>
+                  <p className="mt-1 text-xs font-semibold text-accent">{spk.title}</p>
+                  <p className="text-xs text-ink-muted">{spk.company}</p>
+                  <p className="my-4 line-clamp-3 text-xs leading-relaxed text-ink-muted">
+                    {spk.bio}
+                  </p>
 
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {spk.topicTags?.map((tag, tIdx) => (
-                      <span key={tIdx} className="text-[10px] font-semibold bg-forge-warmGrey text-slate-700 px-2.5 py-1 rounded-full">
+                      <span
+                        key={tIdx}
+                        className="rounded-sm bg-canvas px-2.5 py-1 text-[10px] font-medium text-ink-muted"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -413,38 +426,42 @@ export const EventDetail = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No speakers announced yet.</p>
+              <p className="text-sm text-ink-muted">No speakers announced yet.</p>
             )}
           </div>
         )}
 
-        {/* TICKETS TAB */}
+        {/* TICKETS */}
         {activeTab === 'tickets' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
             {tickets && tickets.length > 0 ? (
               tickets.map((tkt) => (
-                <Card key={tkt._id} className="p-8 border border-slate-200 flex flex-col justify-between hover:border-forge-accent">
+                <Card key={tkt._id} className="flex flex-col justify-between p-8">
                   <div>
                     <Badge variant="accent">{tkt.name}</Badge>
-                    <div className="mt-4 mb-2">
-                      <span className="font-serif text-4xl font-bold text-slate-900">${tkt.price}</span>
-                      <span className="text-xs text-slate-400"> / pass</span>
+                    <div className="mb-2 mt-5 flex items-baseline gap-2">
+                      <span className="font-display text-4xl text-outline text-ink">
+                        ${tkt.price}
+                      </span>
+                      <span className="text-xs text-ink-muted">/ pass</span>
                     </div>
-                    <p className="text-xs text-slate-600 mb-6 leading-relaxed">{tkt.description}</p>
-                    
-                    <div className="space-y-2 text-xs text-slate-700 mb-8">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Access to Keynote Sessions</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Encrypted Digital QR Badge</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Networking Lounge & Catering</span>
-                      </div>
+                    <p className="mb-6 text-xs leading-relaxed text-ink-muted">
+                      {tkt.description}
+                    </p>
+
+                    <div className="mb-8 space-y-2 text-xs text-ink-muted">
+                      <p className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-accent" />
+                        Access to keynote sessions
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-accent" />
+                        Encrypted digital QR badge
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-accent" />
+                        Networking lounge &amp; catering
+                      </p>
                     </div>
                   </div>
 
@@ -461,44 +478,53 @@ export const EventDetail = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No ticket passes available.</p>
+              <p className="text-sm text-ink-muted">No ticket passes available.</p>
             )}
           </div>
         )}
 
-        {/* SPONSORS TAB */}
+        {/* SPONSORS */}
         {activeTab === 'sponsors' && (
-          <div className="space-y-12 max-w-4xl mx-auto">
-            <h2 className="font-serif text-2xl font-bold text-slate-900 text-center">Summit Partners & Sponsors</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mx-auto max-w-4xl space-y-12">
+            <h2 className="text-center text-h2 font-bold tracking-tight text-ink">
+              Summit partners &amp; sponsors
+            </h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {sponsors && sponsors.length > 0 ? (
                 sponsors.map((sp) => (
-                  <Card key={sp._id} className="p-6 flex items-center gap-6 border border-slate-200">
+                  <Card key={sp._id} className="flex items-center gap-6 p-6">
                     <img
                       src={sp.logo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80'}
                       alt={sp.organizationName}
-                      className="w-16 h-16 rounded-2xl object-cover border border-slate-100"
+                      className="h-16 w-16 rounded-md border border-line object-cover"
                     />
                     <div>
-                      <Badge variant="warning">{sp.packageId?.tier?.toUpperCase() || 'PLATINUM'}</Badge>
-                      <h3 className="font-serif text-xl font-bold text-slate-900 mt-1">{sp.organizationName}</h3>
-                      <a href={sp.website} target="_blank" rel="noreferrer" className="text-xs text-forge-accent font-semibold hover:underline">
-                        {sp.website || 'Visit Partner Website'}
+                      <Badge variant="warning">
+                        {sp.packageId?.tier?.toUpperCase() || 'PLATINUM'}
+                      </Badge>
+                      <h3 className="mt-2 text-h3 font-semibold text-ink">
+                        {sp.organizationName}
+                      </h3>
+                      <a
+                        href={sp.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-accent hover:underline"
+                      >
+                        {sp.website || 'Visit partner website'}
                       </a>
                     </div>
                   </Card>
                 ))
               ) : (
-                <p className="text-slate-500 text-sm">No sponsors listed.</p>
+                <p className="text-sm text-ink-muted">No sponsors listed.</p>
               )}
             </div>
           </div>
         )}
-
       </main>
 
-
-      {/* TICKET CHECKOUT MODAL */}
+      {/* ── CHECKOUT MODAL ── */}
       <Modal
         isOpen={checkoutModalOpen}
         onClose={() => setCheckoutModalOpen(false)}
@@ -507,62 +533,57 @@ export const EventDetail = () => {
         maxWidth="max-w-md"
       >
         <div className="space-y-5">
-          
           {selectedTicket && (
-            <div className="p-4 rounded-2xl bg-forge-warmGrey/60 border border-slate-200 space-y-2">
+            <div className="space-y-2 rounded-md border border-line bg-canvas p-4">
               <div className="flex items-center justify-between">
-                <span className="font-serif font-bold text-slate-900">{selectedTicket.name}</span>
-                <span className="font-serif font-bold text-lg text-forge-accent">${selectedTicket.price}</span>
+                <span className="font-semibold text-ink">{selectedTicket.name}</span>
+                <span className="font-semibold text-accent">${selectedTicket.price}</span>
               </div>
-              <p className="text-xs text-slate-500">{selectedTicket.description}</p>
+              <p className="text-xs text-ink-muted">{selectedTicket.description}</p>
             </div>
           )}
 
-          {/* Coupon Code Entry */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Promo / Coupon Code
-            </label>
+          <div className="space-y-2">
+            <label className="eyebrow block text-ink-muted">Promo / Coupon Code</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
                 placeholder="Try FORGE20 for 20% off"
-                className="flex-1 bg-white border border-slate-200 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-forge-accent uppercase"
+                className="field flex-1 uppercase"
               />
               <Button size="sm" variant="secondary" onClick={handleValidateCoupon}>
                 Apply
               </Button>
             </div>
             {couponApplied && (
-              <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" /> Coupon '{couponApplied.code}' Applied ({couponApplied.discountValue}% Off)
+              <p className="flex items-center gap-1 text-xs font-semibold text-success">
+                <Check className="h-3.5 w-3.5" /> Coupon '{couponApplied.code}' applied ({couponApplied.discountValue}% off)
               </p>
             )}
-            {couponError && <p className="text-xs text-rose-600 font-medium">{couponError}</p>}
+            {couponError && <p className="text-xs font-medium text-danger">{couponError}</p>}
           </div>
 
-          {/* Order Summary */}
-          <div className="pt-3 border-t border-slate-200 space-y-2 text-xs">
-            <div className="flex justify-between text-slate-600">
+          <div className="space-y-2 border-t border-line pt-4 text-xs">
+            <div className="flex justify-between text-ink-muted">
               <span>Subtotal</span>
               <span>${selectedTicket?.price || 0}</span>
             </div>
             {couponApplied && (
-              <div className="flex justify-between text-emerald-700 font-medium">
+              <div className="flex justify-between font-medium text-success">
                 <span>Discount</span>
                 <span>-${selectedTicket.price - calculateFinalPrice()}</span>
               </div>
             )}
-            <div className="flex justify-between font-serif font-bold text-base text-slate-900 pt-2 border-t border-slate-200">
-              <span>Total Amount Paid</span>
-              <span className="text-forge-accent">${calculateFinalPrice()}</span>
+            <div className="flex justify-between border-t border-line pt-3 text-base font-semibold text-ink">
+              <span>Total amount paid</span>
+              <span className="text-accent">${calculateFinalPrice()}</span>
             </div>
           </div>
 
           {checkoutError && (
-            <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-medium">
+            <div className="rounded-md bg-danger-soft p-3 text-xs font-medium text-danger">
               {checkoutError}
             </div>
           )}
@@ -574,12 +595,10 @@ export const EventDetail = () => {
             className="w-full"
             icon={Ticket}
           >
-            {purchasing ? 'Processing Order...' : 'Confirm Registration Pass'}
+            {purchasing ? 'Processing order…' : 'Confirm Registration Pass'}
           </Button>
-
         </div>
       </Modal>
-
     </div>
   );
 };

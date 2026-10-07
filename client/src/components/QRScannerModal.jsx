@@ -130,23 +130,23 @@ export const QRScannerModal = ({ isOpen, onClose, eventId, onScanSuccess }) => {
       <div className="space-y-6">
 
         {/* Visual Scanner Area */}
-        <div className="relative bg-slate-900 rounded-3xl p-6 text-white text-center flex flex-col items-center justify-center border border-slate-800">
+        <div className="relative bg-night rounded-md p-6 text-white text-center flex flex-col items-center justify-center border border-night-line">
           {/* The reader element must stay mounted and laid out at all times: html5-qrcode
               measures it to size the video feed, and a display:none element measures 0x0,
               which makes scanner.start() fail. The idle placeholder is an overlay instead. */}
-          <div className="relative w-full max-w-xs min-h-[220px] rounded-2xl overflow-hidden bg-black/40 border border-slate-800 flex items-center justify-center">
+          <div className="relative w-full max-w-xs min-h-[220px] rounded-md overflow-hidden bg-black/40 border border-night-line flex items-center justify-center">
             <div id={READER_ELEMENT_ID} className="w-full" />
 
             {!cameraActive && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-2xl bg-forge-accent/30 border-2 border-dashed border-emerald-400 flex items-center justify-center">
-                  <QrCode className="w-12 h-12 text-emerald-400" />
+                <div className="w-24 h-24 rounded-md bg-accent/30 border-2 border-dashed border-accent flex items-center justify-center">
+                  <QrCode className="w-12 h-12 text-accent" />
                 </div>
               </div>
             )}
           </div>
 
-          <p className="text-xs text-slate-300 font-medium mt-3">
+          <p className="text-xs text-white/70 font-medium mt-3">
             {cameraActive
               ? 'Point the camera at the attendee QR badge'
               : 'Use the camera to scan, or enter the badge token code below'}
@@ -154,27 +154,27 @@ export const QRScannerModal = ({ isOpen, onClose, eventId, onScanSuccess }) => {
 
           <div className="w-full mt-4 flex items-center justify-center">
             {cameraActive ? (
-              <Button size="sm" variant="secondary" onClick={stopCamera} icon={CameraOff}>
+              <Button size="sm" variant="inverse" onClick={stopCamera} icon={CameraOff}>
                 Stop Camera
               </Button>
             ) : (
-              <Button size="sm" variant="secondary" onClick={startCamera} icon={Camera}>
+              <Button size="sm" variant="inverse" onClick={startCamera} icon={Camera}>
                 Start Camera Scan
               </Button>
             )}
           </div>
 
           {cameraError && (
-            <p className="text-[11px] text-amber-300 mt-3 max-w-sm">{cameraError}</p>
+            <p className="text-[11px] text-warning-light mt-3 max-w-sm">{cameraError}</p>
           )}
 
-          <div className="w-full mt-5 pt-5 border-t border-slate-800 flex gap-2">
+          <div className="w-full mt-5 pt-5 border-t border-night-line flex gap-2">
             <input
               type="text"
               value={qrToken}
               onChange={(e) => setQrToken(e.target.value)}
               placeholder="e.g. EF-REG-2026-998811"
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400"
+              className="flex-1 bg-night-raised border border-night-line rounded-md px-4 py-2 text-xs text-white placeholder-night-muted focus:outline-none focus:border-accent"
             />
             <Button
               size="sm"
@@ -189,12 +189,12 @@ export const QRScannerModal = ({ isOpen, onClose, eventId, onScanSuccess }) => {
 
         {/* Scan Result Feedback */}
         {scanResult && (
-          <div className={`p-5 rounded-2xl border ${scanResult.alreadyCheckedIn ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'} animate-fade-in`}>
+          <div className={`p-5 rounded-md border ${scanResult.alreadyCheckedIn ? 'bg-warning-soft border-warning/20 text-warning' : 'bg-success-soft border-success/20 text-success'} animate-fade-in`}>
             <div className="flex items-start gap-3">
               {scanResult.alreadyCheckedIn ? (
-                <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                <AlertCircle className="w-6 h-6 text-warning shrink-0 mt-0.5" />
               ) : (
-                <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+                <CheckCircle className="w-6 h-6 text-success shrink-0 mt-0.5" />
               )}
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -207,14 +207,14 @@ export const QRScannerModal = ({ isOpen, onClose, eventId, onScanSuccess }) => {
                 </div>
 
                 {scanResult.registration && (
-                  <div className="mt-3 bg-white/70 rounded-xl p-3 text-xs space-y-1">
-                    <p className="font-semibold text-slate-900 text-sm">
+                  <div className="mt-3 bg-surface rounded-md p-3 text-xs space-y-1">
+                    <p className="font-semibold text-ink text-sm">
                       {scanResult.registration.attendeeId?.fullName || 'Registered Delegate'}
                     </p>
-                    <p className="text-slate-600">{scanResult.registration.attendeeId?.email}</p>
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
-                      <span className="font-bold text-slate-700">Ticket Tier:</span>
-                      <span className="bg-forge-accent text-white px-2 py-0.5 rounded-full text-[10px]">
+                    <p className="text-ink-muted">{scanResult.registration.attendeeId?.email}</p>
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-line">
+                      <span className="font-bold text-ink">Ticket Tier:</span>
+                      <span className="bg-accent text-white px-2 py-0.5 rounded-sm text-[10px]">
                         {scanResult.registration.ticketCategoryId?.name || 'General'}
                       </span>
                     </div>
@@ -226,8 +226,8 @@ export const QRScannerModal = ({ isOpen, onClose, eventId, onScanSuccess }) => {
         )}
 
         {errorMsg && !scanResult?.alreadyCheckedIn && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          <div className="p-4 rounded-md bg-danger-soft border border-danger/20 text-danger text-xs flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-danger shrink-0" />
             <p>{errorMsg}</p>
           </div>
         )}

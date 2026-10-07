@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { Layers, Shield, ArrowRight, Lock, Mail } from 'lucide-react';
+import { Layers, Shield, Lock, Mail } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -43,97 +42,107 @@ export const Login = () => {
     }
   };
 
+  // Six pastel chips would reintroduce the rainbow the restyle removes; one neutral
+  // treatment with a small status dot keeps the roles distinguishable without colour-coding.
   const roles = [
-    { title: 'Platform Admin', email: 'admin@eventforge.com', color: 'bg-rose-50 text-rose-700 border-rose-200' },
-    { title: 'Event Organizer', email: 'organizer@eventforge.com', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { title: 'Event Staff', email: 'staff@eventforge.com', color: 'bg-sky-50 text-sky-700 border-sky-200' },
-    { title: 'Speaker', email: 'speaker@eventforge.com', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    { title: 'Attendee', email: 'attendee@eventforge.com', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-    { title: 'Sponsor', email: 'sponsor@eventforge.com', color: 'bg-slate-100 text-slate-700 border-slate-200' }
+    { title: 'Platform Admin', email: 'admin@eventforge.com', dot: 'bg-warning' },
+    { title: 'Event Organizer', email: 'organizer@eventforge.com', dot: 'bg-accent' },
+    { title: 'Event Staff', email: 'staff@eventforge.com', dot: 'bg-info' },
+    { title: 'Speaker', email: 'speaker@eventforge.com', dot: 'bg-accent' },
+    { title: 'Attendee', email: 'attendee@eventforge.com', dot: 'bg-success' },
+    { title: 'Sponsor', email: 'sponsor@eventforge.com', dot: 'bg-ink-muted' }
   ];
 
   return (
-    <div className="min-h-screen bg-forge-bg text-slate-900 font-sans flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-        
-        {/* Left Form */}
-        <Card className="md:col-span-6 p-8 border border-slate-200 shadow-2xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-forge-accent flex items-center justify-center">
-              <Layers className="w-5 h-5 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-8 py-16 text-ink">
+      <div className="grid w-full max-w-4xl grid-cols-1 items-center gap-12 md:grid-cols-12">
+        {/* Form */}
+        <Card hover={false} className="p-8 md:col-span-6">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-none bg-accent">
+              <Layers className="h-5 w-5 text-white" />
             </div>
-            <h1 className="font-serif text-2xl font-bold text-slate-900">Sign In to EventForge</h1>
+            <h1 className="font-display text-3xl leading-none text-ink">
+              SIGN IN TO EVENT<span className="text-accent">FORGE</span>
+            </h1>
           </div>
 
           {error && (
-            <div className="p-3 mb-4 rounded-xl bg-rose-50 text-rose-700 text-xs font-medium">
+            <div className="mb-4 rounded-md bg-danger-soft p-3 text-xs font-medium text-danger">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+              <label className="eyebrow mb-2 block text-ink-muted">Email Address</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-ink-muted" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="name@company.com"
-                  className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+                  className="field pl-10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+              <label className="eyebrow mb-2 block text-ink-muted">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-ink-muted" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+                  className="field pl-10"
                 />
               </div>
             </div>
 
             <Button type="submit" disabled={loading} variant="primary" className="w-full">
-              {loading ? 'Authenticating...' : 'Sign In'}
+              {loading ? 'Authenticating…' : 'Sign In'}
             </Button>
           </form>
 
-          <p className="text-xs text-slate-500 text-center mt-6">
-            Don't have an account? <Link to="/register" className="text-forge-accent font-bold hover:underline">Create Account</Link>
+          <p className="mt-6 text-center text-xs text-ink-muted">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-semibold text-accent hover:underline">
+              Create Account
+            </Link>
           </p>
         </Card>
 
-        {/* Right 1-Click Persona Demo Panel */}
-        <div className="md:col-span-6 space-y-4">
+        {/* 1-click persona demo */}
+        <div className="space-y-4 md:col-span-6">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-forge-gold" />
-            <h2 className="font-serif text-xl font-bold text-slate-900">Demo Role Switcher</h2>
+            <Shield className="h-5 w-5 text-accent" />
+            <h2 className="text-h3 font-semibold text-ink">Demo Role Switcher</h2>
           </div>
-          <p className="text-xs text-slate-600">Click any role persona to auto-login & explore role-scoped dashboards:</p>
+          <p className="text-xs text-ink-muted">
+            Click any role persona to auto-login and explore its scoped dashboard.
+          </p>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {roles.map((r, idx) => (
               <button
                 key={idx}
                 onClick={() => handleQuickRole(r.email)}
-                className={`p-3.5 rounded-2xl border text-left transition-all hover:scale-102 ${r.color}`}
+                className="rounded-md border border-line bg-surface p-3.5 text-left transition-colors hover:border-accent"
               >
-                <p className="font-serif font-bold text-xs">{r.title}</p>
-                <p className="text-[10px] opacity-80 mt-0.5">{r.email}</p>
+                <p className="flex items-center gap-2 text-xs font-semibold text-ink">
+                  <span className={`h-1.5 w-1.5 rounded-full ${r.dot}`} />
+                  {r.title}
+                </p>
+                <p className="mt-1 text-[10px] text-ink-muted">{r.email}</p>
               </button>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

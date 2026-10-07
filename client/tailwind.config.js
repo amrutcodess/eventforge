@@ -7,67 +7,78 @@ export default {
   theme: {
     extend: {
       colors: {
-        forge: {
-          obsidian: '#0B0D0C',
-          dark: '#111413',
-          darkCard: '#181C1A',
-          darkBorder: 'rgba(255, 255, 255, 0.08)',
-          glass: 'rgba(255, 255, 255, 0.03)',
-          glassBorder: 'rgba(255, 255, 255, 0.12)',
-          accent: '#2D4A3E',
-          accentGlow: '#3B6051',
-          accentHover: '#21392E',
-          accentLight: 'rgba(45, 74, 62, 0.25)',
-          gold: '#D4AF37',
-          goldGlow: 'rgba(212, 175, 55, 0.3)',
-          cyan: '#00F2FE',
-          bg: '#F8F9FA',
-          warmGrey: '#F4F4F0'
-        }
+        // ═══ The accent is a single swappable source. ═══
+        // Channels live on :root in index.css, so every accent surface — including the
+        // Recharts series, which fades through getComputedStyle — moves together.
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          hover: 'rgb(var(--accent-hover) / <alpha-value>)',
+          deep: 'rgb(var(--accent-deep) / <alpha-value>)',
+          alt: 'rgb(var(--accent-alt) / <alpha-value>)',
+        },
+
+        // Neutrals — cool zinc, one accent hue, no second colour anywhere.
+        canvas: '#fafafa',
+        surface: { DEFAULT: '#ffffff', muted: '#f4f4f5' },
+        night: { DEFAULT: '#09090b', raised: '#18181b', line: '#27272a', muted: '#a1a1aa' },
+        ink: { DEFAULT: '#09090b', muted: '#71717b' },
+        line: { DEFAULT: '#e4e4e7', strong: '#d4d4d8' },
+
+        // Status. `info` is deliberately neutral zinc, not blue: the reference has one
+        // accent and no second hue, and a blue badge reintroduces the rainbow.
+        success: { DEFAULT: '#15803d', soft: '#f0fdf4' },
+        // `.light` is the variant to use for status text sitting on a dark surface —
+        // the DEFAULT tones are tuned for light backgrounds and fall below 4.5:1 on `night`.
+        warning: { DEFAULT: '#b45309', soft: '#fffbeb', light: '#fcd34d' },
+        danger: { DEFAULT: '#b91c1c', soft: '#fef2f2', light: '#fca5a5' },
+        info: { DEFAULT: '#3f3f46', soft: '#f4f4f5' },
       },
       fontFamily: {
-        serif: ['Playfair Display', 'Fraunces', 'Georgia', 'serif'],
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['Fira Code', 'monospace']
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // Caps-only, weight 400, and it wants generous tracking to read as "tracking-wide".
+        // Used on at most two headings per public page and one metric per dashboard.
+        display: ['"Bebas Neue"', 'Impact', 'sans-serif'],
+      },
+      fontSize: {
+        // The reference's literal hero is clamp(6rem,16vw,13rem) — that floors at 96px,
+        // and a condensed word at 96px is ~550px wide, which overflows a 375px phone.
+        // This floors at 48px instead.
+        'hero': ['clamp(3rem, 11vw, 9rem)', { lineHeight: '0.88', letterSpacing: '0.005em' }],
+        'display': ['clamp(2.5rem, 7vw, 5rem)', { lineHeight: '0.9' }],
+        'h2': ['2.25rem', { lineHeight: '1.1', letterSpacing: '-0.025em' }],
+        'h2-lg': ['3rem', { lineHeight: '1.05', letterSpacing: '-0.025em' }],
+        'h3': ['1.5rem', { lineHeight: '1.25', letterSpacing: '-0.02em' }],
+        'body-lg': ['1.125rem', { lineHeight: '1.65' }],
+        'body': ['1rem', { lineHeight: '1.65' }],
+        'body-sm': ['0.875rem', { lineHeight: '1.6' }],
+        'eyebrow': ['0.6875rem', { lineHeight: '1', letterSpacing: '0.3em' }],
+        'caps-btn': ['0.75rem', { lineHeight: '1', letterSpacing: '0.25em' }],
       },
       borderRadius: {
-        '2xl': '1rem',
-        '3xl': '1.5rem',
-        '4xl': '2rem',
-        '5xl': '2.5rem'
+        none: '0',
+        sm: '0.375rem',
+        md: '0.5rem',
+        lg: '1rem',
+        full: '9999px',
       },
       boxShadow: {
-        'forge-soft': '0 20px 40px -15px rgba(0, 0, 0, 0.5)',
-        'forge-glow': '0 0 40px rgba(45, 74, 62, 0.4)',
-        'forge-card': '0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -14px rgba(15, 23, 42, 0.18)',
-        'gold-glow': '0 0 35px rgba(212, 175, 55, 0.35)',
-        'glass-card': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-      },
-      animation: {
-        'float': 'float 6s ease-in-out infinite',
-        'float-reverse': 'floatReverse 7s ease-in-out infinite',
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'marquee': 'marquee 25s linear infinite',
-        'glow-spin': 'glowSpin 12s linear infinite'
+        // The only shadow in the system. Separation comes from background alternation
+        // and hairlines, not elevation.
+        menu: '0 8px 24px rgba(9, 9, 11, 0.12)',
       },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-          '50%': { transform: 'translateY(-12px) rotate(1.5deg)' }
-        },
-        floatReverse: {
-          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-          '50%': { transform: 'translateY(12px) rotate(-1.5deg)' }
-        },
-        marquee: {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-50%)' }
-        },
-        glowSpin: {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' }
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'rise-in': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'none' }
         }
-      }
+      },
+      animation: {
+        // `animate-fade-in` was applied in four modals and never defined — a silent
+        // no-op. It is real now.
+        'fade-in': 'fade-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'rise-in': 'rise-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
+      },
     },
   },
   plugins: [],

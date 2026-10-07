@@ -1,36 +1,37 @@
 import React from 'react';
 
+/**
+ * Badges are for STATUS, not decoration. Section headers use the `.eyebrow` class
+ * instead — using a badge as a section header was the visible symptom of the old drift.
+ *
+ * The shell is square with uppercase micro-type, matching the reference. `gold` is kept
+ * as a variant name for call-site compatibility but maps onto the single accent.
+ */
 export const Badge = ({
   children,
   variant = 'accent',
-  dot = true,
+  dot = false,
   className = ''
 }) => {
   const variants = {
-    accent: 'bg-forge-accent/30 text-emerald-300 border-forge-accent/60',
-    gold: 'bg-forge-gold/20 text-amber-300 border-forge-gold/40',
-    success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-    warning: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    danger: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-    info: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-    dark: 'bg-white/10 text-slate-300 border-white/15'
-  };
-
-  const dotColors = {
-    accent: 'bg-emerald-400',
-    gold: 'bg-amber-400',
-    success: 'bg-emerald-400',
-    warning: 'bg-amber-400',
-    danger: 'bg-rose-400',
-    info: 'bg-sky-400',
-    dark: 'bg-slate-400'
+    accent: 'bg-accent/10 text-accent border-accent/30',
+    gold: 'bg-accent/10 text-accent border-accent/30',
+    success: 'bg-success-soft text-success border-success/30',
+    warning: 'bg-warning-soft text-warning border-warning/30',
+    danger: 'bg-danger-soft text-danger border-danger/30',
+    info: 'bg-info-soft text-info border-info/30',
+    neutral: 'bg-canvas text-ink-muted border-line',
+    dark: 'bg-white/10 text-white border-white/20'
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full border backdrop-blur-md ${variants[variant]} ${className}`}
+      className={`inline-flex items-center gap-2 rounded-none border px-2.5 py-1 text-eyebrow uppercase font-medium ${
+        variants[variant] || variants.accent
+      } ${className}`}
     >
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotColors[variant]} animate-pulse`} />}
+      {/* `bg-current`, and no pulse — the permanently pulsing dot was an AI tell. */}
+      {dot && <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-current" />}
       <span>{children}</span>
     </span>
   );

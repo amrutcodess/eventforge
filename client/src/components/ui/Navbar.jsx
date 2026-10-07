@@ -2,19 +2,27 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from './Button';
-import { Badge } from './Badge';
 import { Shield, Sparkles, Layers, ChevronDown, LogOut } from 'lucide-react';
+
+const DOT = {
+  warning: 'bg-warning',
+  accent: 'bg-accent',
+  info: 'bg-info',
+  success: 'bg-success',
+  dark: 'bg-ink-muted'
+};
 
 export const Navbar = () => {
   const { user, login, logout } = useAuth();
   const navigate = useNavigate();
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
+  // Kept exactly as it was — the one-click persona login is a deliberate demo affordance.
   const demoAccounts = [
     { role: 'Platform Admin', email: 'admin@eventforge.com', badge: 'warning' },
     { role: 'Event Organizer', email: 'organizer@eventforge.com', badge: 'accent' },
     { role: 'Event Staff', email: 'staff@eventforge.com', badge: 'info' },
-    { role: 'Speaker', email: 'speaker@eventforge.com', badge: 'gold' },
+    { role: 'Speaker', email: 'speaker@eventforge.com', badge: 'accent' },
     { role: 'Attendee', email: 'attendee@eventforge.com', badge: 'success' },
     { role: 'Sponsor', email: 'sponsor@eventforge.com', badge: 'dark' }
   ];
@@ -29,64 +37,65 @@ export const Navbar = () => {
     }
   };
 
+  // h-20 is load-bearing: EventDetail's sticky tab bar offsets by `top-20`. Do not change it.
   return (
-    <nav className="sticky top-0 z-50 bg-forge-obsidian/85 backdrop-blur-xl border-b border-white/10 text-white transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        
-        {/* Logo Left */}
-        <Link to="/" className="flex items-center gap-3.5 group">
-          <div className="w-10 h-10 rounded-2xl bg-forge-accent border border-emerald-400/40 flex items-center justify-center shadow-forge-glow transition-transform group-hover:scale-105">
-            <Layers className="w-5 h-5 text-white" />
+    <nav className="sticky top-0 z-50 h-20 border-b border-line bg-canvas text-ink">
+      <div className="gutter flex h-20 items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="group flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-none bg-accent">
+            <Layers className="h-5 w-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-2xl font-bold tracking-tight text-white leading-none">
-              EVENT<span className="text-forge-gold">FORGE</span>
+            <span className="font-sans text-xl font-bold leading-none tracking-tight text-ink">
+              EVENT<span className="text-accent">FORGE</span>
             </span>
-            <span className="text-[10px] font-mono font-medium text-slate-400 uppercase tracking-widest mt-1">
-              ScrollTide Luxury Edition
-            </span>
+            <span className="eyebrow mt-1.5 text-ink-muted">Enterprise Event Platform</span>
           </div>
         </Link>
 
-        {/* Links Center */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wide text-slate-300">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">Discover Summits</Link>
+        {/* Links */}
+        <div className="hidden items-center gap-8 text-sm font-medium text-ink-muted md:flex">
+          <Link to="/" className="transition-colors hover:text-accent">
+            Discover Summits
+          </Link>
           {user && (
-            <Link to="/dashboard" className="hover:text-emerald-400 transition-colors flex items-center gap-2 text-emerald-300 font-bold">
-              <Sparkles className="w-4 h-4 text-forge-gold animate-pulse" />
-              <span>Role Workspace</span>
+            <Link to="/dashboard" className="flex items-center gap-2 font-semibold text-accent">
+              <Sparkles className="h-4 w-4" />
+              Role Workspace
             </Link>
           )}
         </div>
 
-        {/* CTA Right & Quick Role Switcher */}
         <div className="flex items-center gap-3">
-
-          {/* Demo Role Switcher Dropdown */}
+          {/* Demo Role Switcher */}
           <div className="relative">
             <button
               onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/15 rounded-full text-slate-200 transition-all backdrop-blur-md"
+              className="flex items-center gap-2 border border-line px-3.5 py-2 text-xs font-semibold text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
             >
-              <Shield className="w-3.5 h-3.5 text-forge-gold" />
+              <Shield className="h-3.5 w-3.5 text-accent" />
               <span className="hidden sm:inline">Role Switcher</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="h-3.5 w-3.5" />
             </button>
 
             {roleDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-forge-darkCard border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-fade-in backdrop-blur-2xl">
-                <div className="px-3 py-2 border-b border-white/10">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">1-Click Persona Login</p>
+              <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-line bg-surface p-2 shadow-menu animate-fade-in">
+                <div className="border-b border-line px-3 py-2">
+                  <p className="eyebrow text-ink-muted">1-Click Persona Login</p>
                 </div>
                 <div className="py-1">
                   {demoAccounts.map((acc, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleQuickLogin(acc.email)}
-                      className="w-full px-3 py-2 text-left text-xs text-slate-200 hover:bg-forge-accent/40 rounded-xl flex items-center justify-between transition-colors my-0.5"
+                      className="my-0.5 flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs text-ink transition-colors hover:bg-canvas"
                     >
-                      <span className="font-semibold">{acc.role}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{acc.email.split('@')[0]}</span>
+                      <span className="flex items-center gap-2 font-semibold">
+                        <span className={`h-1.5 w-1.5 rounded-full ${DOT[acc.badge] || 'bg-accent'}`} />
+                        {acc.role}
+                      </span>
+                      <span className="text-[10px] text-ink-muted">{acc.email.split('@')[0]}</span>
                     </button>
                   ))}
                 </div>
@@ -94,29 +103,32 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* User Auth Buttons */}
+          {/* Auth */}
           {user ? (
             <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="flex items-center gap-2 text-xs font-semibold text-slate-200 hover:text-white">
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-2 text-xs font-semibold text-ink-muted transition-colors hover:text-ink"
+              >
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.fullName}
-                  className="w-9 h-9 rounded-full border border-emerald-400/50 object-cover"
+                  className="h-9 w-9 rounded-full border border-line object-cover"
                 />
                 <span className="hidden md:inline">{user.fullName.split(' ')[0]}</span>
               </Link>
               <button
                 onClick={logout}
-                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400 hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-line text-ink-muted transition-colors hover:border-danger/40 hover:text-danger"
                 title="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <Button variant="ghost" size="sm">
                   Sign In
                 </Button>
               </Link>
@@ -127,9 +139,7 @@ export const Navbar = () => {
               </Link>
             </div>
           )}
-
         </div>
-
       </div>
     </nav>
   );

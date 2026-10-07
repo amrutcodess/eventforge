@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { QrCode, Sparkles, Star, Calendar, MapPin, CheckCircle, Clock, User } from 'lucide-react';
+import { QrCode, Sparkles, Star, Calendar, CheckCircle, Clock, User } from 'lucide-react';
 import api from '../utils/api';
 
 export const TicketPass = () => {
@@ -65,140 +65,144 @@ export const TicketPass = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-forge-bg flex items-center justify-center p-8">
-        <div className="w-12 h-12 rounded-full border-4 border-forge-accent border-t-transparent animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-canvas p-8">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
 
   if (!registration) {
     return (
-      <div className="min-h-screen bg-forge-bg flex flex-col items-center justify-center p-8">
-        <h2 className="font-serif text-2xl font-bold">No Active Ticket Pass Found</h2>
-        <Button className="mt-4" onClick={() => navigate('/')}>Discover Events</Button>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-canvas p-8">
+        <QrCode className="h-8 w-8 text-ink-muted" />
+        <h2 className="mt-6 text-h3 font-semibold text-ink">No active ticket pass found</h2>
+        <Button className="mt-6" onClick={() => navigate('/')}>Discover Events</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-forge-bg text-slate-900 font-sans py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-10">
-        
-        {/* DIGITAL BADGE CARD */}
-        <div className="bg-forge-dark text-white rounded-3xl p-8 shadow-2xl border border-forge-darkBorder relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-forge-accent/20 blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-canvas px-8 py-16 text-ink md:px-16">
+      <div className="mx-auto max-w-4xl space-y-16">
+        {/* DIGITAL BADGE — a dark inset on the light page, not a full-bleed band. */}
+        <div className="grid grid-cols-1 overflow-hidden rounded-lg border border-night-line bg-night text-white md:grid-cols-12">
+          {/* QR */}
+          <div className="flex flex-col items-center justify-center gap-4 border-b border-night-line p-8 md:col-span-5 md:border-b-0 md:border-r">
+            <div className="rounded-md border-2 border-accent bg-white p-4">
+              <img
+                src={registration.qrCodeDataUri}
+                alt="Attendee QR Code Token"
+                className="mx-auto h-48 w-48"
+              />
+            </div>
+            <p className="font-mono text-xs text-white/60">{registration.qrCodeToken}</p>
+            <Badge variant={registration.checkedIn ? 'success' : 'dark'}>
+              {registration.checkedIn ? 'Verified on-site access' : 'Ready for check-in'}
+            </Badge>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
-            
-            {/* Left QR Code Badge */}
-            <div className="md:col-span-5 text-center flex flex-col items-center">
-              <div className="bg-white p-4 rounded-3xl shadow-xl border-4 border-forge-accent">
-                <img
-                  src={registration.qrCodeDataUri}
-                  alt="Attendee QR Code Token"
-                  className="w-48 h-48 mx-auto"
-                />
-              </div>
-              <p className="font-mono text-xs text-forge-gold mt-3 font-semibold">
-                {registration.qrCodeToken}
-              </p>
-              <Badge variant={registration.checkedIn ? 'success' : 'dark'} className="mt-2">
-                {registration.checkedIn ? 'VERIFIED ON-SITE ACCESS' : 'READY FOR CHECK-IN'}
-              </Badge>
+          {/* Attendee */}
+          <div className="space-y-5 p-8 md:col-span-7">
+            <div className="flex items-center justify-between gap-4">
+              <Badge variant="accent">{registration.ticketCategoryId?.name || 'VIP Pass'}</Badge>
+              <span className="font-mono text-xs text-white/50">
+                ORDER: {registration.orderNumber}
+              </span>
             </div>
 
-            {/* Right Attendee Info */}
-            <div className="md:col-span-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge variant="accent">{registration.ticketCategoryId?.name || 'VIP Pass'}</Badge>
-                <span className="text-xs font-mono text-slate-400">ORDER: {registration.orderNumber}</span>
-              </div>
+            <h1 className="font-display text-display uppercase leading-none text-white">
+              {registration.eventId?.title || 'Global AI Summit 2026'}
+            </h1>
 
-              <h1 className="font-serif text-3xl font-bold text-white leading-tight">
-                {registration.eventId?.title || 'Global AI Summit 2026'}
-              </h1>
-
-              <div className="pt-2 pb-4 border-y border-slate-800 space-y-2 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-forge-gold" />
-                  <span className="font-bold text-white">{user?.fullName}</span> ({user?.company || 'Delegate'})
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-emerald-400" />
-                  <span>
-                    {new Date(registration.eventId?.startDate || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Present this encrypted QR badge token to on-site event staff at the main entrance scanner for immediate check-in badge printing.
+            <div className="space-y-3 border-y border-night-line py-5 text-xs text-white/70">
+              <p className="flex items-center gap-2">
+                <User className="h-4 w-4 text-accent" />
+                <span className="font-semibold text-white">{user?.fullName}</span>
+                <span>({user?.company || 'Delegate'})</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-accent" />
+                {new Date(registration.eventId?.startDate || Date.now()).toLocaleDateString(
+                  undefined,
+                  { month: 'short', day: 'numeric', year: 'numeric' }
+                )}
               </p>
             </div>
 
+            <p className="text-xs text-white/50">
+              Present this encrypted QR badge token to on-site event staff at the main entrance
+              scanner for immediate check-in badge printing.
+            </p>
           </div>
         </div>
 
-
-        {/* AI RECOMMENDED SESSIONS FOR ATTENDEE */}
-        <section className="space-y-4">
+        {/* AI RECOMMENDED SESSIONS */}
+        <section>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-forge-gold" />
-            <h2 className="font-serif text-2xl font-bold text-slate-900">AI Recommended Sessions</h2>
+            <Sparkles className="h-5 w-5 text-accent" />
+            <h2 className="text-h3 font-semibold text-ink">AI recommended sessions</h2>
           </div>
-          <p className="text-xs text-slate-600">Matched to your profile interests: {user?.interests?.join(', ')}</p>
+          <p className="mt-2 text-xs text-ink-muted">
+            Matched to your profile interests: {user?.interests?.join(', ')}
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
             {recommendedSessions.map((sess) => (
-              <Card key={sess._id} className="p-5 border border-slate-200">
-                <Badge variant="accent">{sess.track}</Badge>
-                <h3 className="font-serif text-lg font-bold text-slate-900 mt-2">{sess.title}</h3>
-                <p className="text-xs text-slate-600 my-2 line-clamp-2">{sess.summary}</p>
-                <div className="flex items-center gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100">
-                  <Clock className="w-4 h-4 text-forge-accent" />
-                  <span>{new Date(sess.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span>• Room: {sess.roomName}</span>
+              <Card key={sess._id}>
+                <Badge variant="neutral">{sess.track}</Badge>
+                <h3 className="mt-4 text-h3 font-semibold text-ink">{sess.title}</h3>
+                <p className="my-3 line-clamp-2 text-body-sm text-ink-muted">{sess.summary}</p>
+                <div className="flex items-center gap-2 border-t border-line pt-4 text-xs text-ink-muted">
+                  <Clock className="h-4 w-4 text-accent" />
+                  <span>
+                    {new Date(sess.startTime).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                  <span>· Room: {sess.roomName}</span>
                 </div>
               </Card>
             ))}
           </div>
         </section>
 
+        {/* FEEDBACK */}
+        <Card>
+          <h2 className="text-h3 font-semibold text-ink">Event feedback &amp; rating</h2>
 
-        {/* EVENT FEEDBACK RATING FORM */}
-        <Card className="p-8 border border-slate-200 space-y-4">
-          <h2 className="font-serif text-2xl font-bold text-slate-900">Event Feedback & Rating</h2>
-          
           {feedbackSubmitted ? (
-            <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span>Thank you! Your feedback score ({rating}/5 stars) has been recorded.</span>
+            <div className="mt-5 flex items-center gap-2 rounded-md bg-success-soft p-4 text-xs font-semibold text-success">
+              <CheckCircle className="h-5 w-5" />
+              <span>Thank you — your score ({rating}/5 stars) has been recorded.</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmitFeedback} className="space-y-4">
+            <form onSubmit={handleSubmitFeedback} className="mt-5 space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Rating</label>
+                <label className="eyebrow mb-3 block text-ink-muted">Rating</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
                       onClick={() => setRating(star)}
-                      className={`p-2 rounded-xl transition-colors ${rating >= star ? 'text-forge-gold bg-amber-50' : 'text-slate-300'}`}
+                      className={`rounded-sm p-2 transition-colors ${
+                        rating >= star ? 'text-accent' : 'text-line-strong'
+                      }`}
                     >
-                      <Star className="w-6 h-6 fill-current" />
+                      <Star className="h-6 w-6 fill-current" />
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Comment</label>
+                <label className="eyebrow mb-2 block text-ink-muted">Comment</label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Share your thoughts on speakers, venue, or sessions..."
-                  className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-forge-accent h-24"
+                  placeholder="Share your thoughts on speakers, venue, or sessions…"
+                  className="field h-24"
                 />
               </div>
 
@@ -206,7 +210,6 @@ export const TicketPass = () => {
             </form>
           )}
         </Card>
-
       </div>
     </div>
   );

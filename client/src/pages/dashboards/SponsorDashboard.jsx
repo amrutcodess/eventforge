@@ -4,7 +4,19 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { DataTable } from '../../components/ui/DataTable';
 import { Award, Upload, ExternalLink, CheckCircle, AlertCircle, Package } from 'lucide-react';
+import { useCountUp } from '../../hooks/useCountUp';
 import api from '../../utils/api';
+
+// Each sponsorship renders its own approved count, so the count-up lives in a small
+// presentational child rather than in a loop (hooks cannot be called per-iteration).
+const ApprovedStat = ({ approved, total }) => {
+  const animated = useCountUp(approved);
+  return (
+    <p className="font-display text-h2 text-outline text-success tabular-nums mt-2">
+      {Math.round(animated).toLocaleString()} / {total}
+    </p>
+  );
+};
 
 export const SponsorDashboard = () => {
   const [sponsorships, setSponsorships] = useState([]);
@@ -88,15 +100,15 @@ export const SponsorDashboard = () => {
       header: 'Deliverable Asset',
       accessor: (row) => (
         <div>
-          <p className="font-semibold text-slate-900 text-xs">{row.title}</p>
-          <p className="text-[10px] text-slate-400">{row.description}</p>
+          <p className="font-semibold text-ink text-xs">{row.title}</p>
+          <p className="text-[10px] text-ink-muted">{row.description}</p>
         </div>
       )
     },
     {
       header: 'Due Date',
       accessor: (row) => (
-        <span className="text-xs text-slate-600 font-mono">
+        <span className="text-xs text-ink-muted font-mono">
           {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '—'}
         </span>
       )
@@ -128,7 +140,7 @@ export const SponsorDashboard = () => {
               href={row.fileUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-xs font-bold text-forge-accent hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-accent hover:underline flex items-center gap-1"
             >
               <span>View File</span>
               <ExternalLink className="w-3 h-3" />
@@ -136,7 +148,7 @@ export const SponsorDashboard = () => {
             <button
               onClick={() => handleUploadClick(sponsorship, row)}
               disabled={uploadingId === row._id}
-              className="text-[10px] font-semibold text-slate-500 hover:text-forge-accent disabled:opacity-50"
+              className="text-[10px] font-semibold text-ink-muted hover:text-accent disabled:opacity-50"
             >
               Replace
             </button>
@@ -145,7 +157,7 @@ export const SponsorDashboard = () => {
           <button
             onClick={() => handleUploadClick(sponsorship, row)}
             disabled={uploadingId === row._id}
-            className="text-xs font-semibold text-forge-accent hover:underline flex items-center gap-1 disabled:opacity-50"
+            className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 disabled:opacity-50"
           >
             <Upload className="w-3 h-3" />
             <span>{uploadingId === row._id ? 'Uploading...' : 'Upload File'}</span>
@@ -155,20 +167,20 @@ export const SponsorDashboard = () => {
   ];
 
   if (loading) {
-    return <div className="h-64 rounded-3xl bg-slate-100 animate-pulse" />;
+    return <div className="h-64 rounded-md bg-surface-muted animate-pulse" />;
   }
 
   if (sponsorships.length === 0) {
     return (
       <div className="space-y-8 font-sans">
         <div>
-          <Badge variant="dark">SPONSOR PARTNER</Badge>
-          <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Sponsor Partner Workspace</h1>
+          <Badge variant="neutral">SPONSOR PARTNER</Badge>
+          <h1 className="font-display text-h2 uppercase text-ink mt-1">Sponsor Partner Workspace</h1>
         </div>
         <Card className="p-12 text-center">
-          <Award className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="font-serif text-xl font-bold text-slate-900">No Sponsorship Linked</h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <Award className="w-12 h-12 text-ink-muted mx-auto mb-3" />
+          <h3 className="text-h3 font-semibold text-ink">No Sponsorship Linked</h3>
+          <p className="text-body-sm text-ink-muted mt-1">
             Your account is not linked to a sponsorship package yet. An event organizer can assign one
             from the sponsor roster.
           </p>
@@ -180,9 +192,9 @@ export const SponsorDashboard = () => {
   return (
     <div className="space-y-8 font-sans">
       <div>
-        <Badge variant="dark">SPONSOR PARTNER</Badge>
-        <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Sponsor Partner Workspace</h1>
-        <p className="text-xs text-slate-500">
+        <Badge variant="neutral">SPONSOR PARTNER</Badge>
+        <h1 className="font-display text-h2 uppercase text-ink mt-1">Sponsor Partner Workspace</h1>
+        <p className="text-body-sm text-ink-muted">
           Track package entitlements, submit brand collateral, and verify booth deliverables
         </p>
       </div>
@@ -197,10 +209,10 @@ export const SponsorDashboard = () => {
 
       {status && (
         <div
-          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
+          className={`p-4 rounded-md text-xs font-semibold flex items-center gap-2 border ${
             status.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
+              ? 'bg-success-soft border-success/30 text-success'
+              : 'bg-danger-soft border-danger/30 text-danger'
           }`}
         >
           {status.type === 'success' ? (
@@ -223,47 +235,45 @@ export const SponsorDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-6">
                 <Badge variant="warning">{pkg?.tier?.toUpperCase() || 'PARTNER'}</Badge>
-                <h3 className="font-serif text-xl font-bold text-slate-900 mt-3">
+                <h3 className="text-h3 font-semibold text-ink mt-3">
                   {sponsorship.organizationName}
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-body-sm text-ink-muted mt-1">
                   {pkg?.name || 'Sponsorship Package'}
                   {pkg?.price != null ? ` ($${pkg.price.toLocaleString()})` : ''}
                 </p>
                 {sponsorship.eventId?.title && (
-                  <p className="text-[10px] text-slate-400 mt-2">{sponsorship.eventId.title}</p>
+                  <p className="text-[10px] text-ink-muted mt-2">{sponsorship.eventId.title}</p>
                 )}
               </Card>
 
               <Card className="p-6">
-                <p className="text-xs text-slate-500">Deliverables Approved</p>
-                <p className="font-serif text-3xl font-bold text-emerald-600 mt-2">
-                  {approved} / {deliverables.length}
-                </p>
+                <p className="text-body-sm text-ink-muted">Deliverables Approved</p>
+                <ApprovedStat approved={approved} total={deliverables.length} />
               </Card>
 
               <Card className="p-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <Package className="w-4 h-4 text-forge-accent" />
-                  <p className="text-xs text-slate-500">Package Entitlements</p>
+                  <Package className="w-4 h-4 text-accent" />
+                  <p className="text-body-sm text-ink-muted">Package Entitlements</p>
                 </div>
                 {pkg?.benefits?.length > 0 ? (
                   <ul className="space-y-1">
                     {pkg.benefits.map((benefit, i) => (
-                      <li key={i} className="text-[11px] text-slate-700 flex items-start gap-1.5">
-                        <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+                      <li key={i} className="text-[11px] text-ink-muted flex items-start gap-1.5">
+                        <CheckCircle className="w-3 h-3 text-success mt-0.5 shrink-0" />
                         <span>{benefit}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-[11px] text-slate-400">No entitlements listed.</p>
+                  <p className="text-[11px] text-ink-muted">No entitlements listed.</p>
                 )}
               </Card>
             </div>
 
             <Card className="p-6 space-y-4">
-              <h2 className="font-serif text-xl font-bold text-slate-900">
+              <h2 className="text-h3 font-semibold text-ink">
                 Brand Deliverables & Assets Tracker
               </h2>
               <DataTable

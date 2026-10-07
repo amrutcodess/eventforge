@@ -59,10 +59,10 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
             <button
               key={t.id}
               onClick={() => setType(t.id)}
-              className={`px-3 py-2 text-xs font-semibold rounded-2xl border transition-all ${
+              className={`px-3 py-2 text-xs font-semibold rounded-sm border transition-colors ${
                 type === t.id
-                  ? 'bg-forge-accent text-white border-forge-accent shadow-sm'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-surface-muted text-ink-muted border-line hover:text-ink'
               }`}
             >
               {t.label}
@@ -72,7 +72,7 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
               Title / Topic Name
             </label>
             <input
@@ -80,12 +80,12 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Next-Gen Generative UI & Agentic Workflows"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1">
               Keywords / Key Highlights (Optional)
             </label>
             <input
@@ -93,7 +93,7 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}
               placeholder="e.g. 3D WebGL, server-side loops, reactive state, enterprise scalability"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
         </div>
@@ -109,18 +109,18 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
         </Button>
 
         {generatedDraft && (
-          <div className="mt-4 p-5 rounded-3xl bg-forge-warmGrey/60 border border-slate-200 space-y-3 animate-fade-in">
+          <div className="mt-4 p-5 rounded-md bg-canvas border border-line space-y-3 animate-fade-in">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-forge-accent">
-                <Sparkles className="w-4 h-4 text-forge-gold" />
+              <div className="flex items-center gap-2 text-xs font-bold text-accent">
+                <Sparkles className="w-4 h-4 text-accent" />
                 <span>Generated Draft</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="px-3 py-1 text-xs font-medium bg-white border border-slate-200 rounded-full text-slate-700 hover:bg-slate-50 flex items-center gap-1"
+                  className="px-3 py-1 text-xs font-medium bg-surface border border-line rounded-sm text-ink hover:bg-surface-muted flex items-center gap-1"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'Copied' : 'Copy'}</span>
                 </button>
                 {onInsertDraft && (
@@ -129,14 +129,14 @@ export const AIModal = ({ isOpen, onClose, onInsertDraft, initialType = 'event_d
                       onInsertDraft(generatedDraft);
                       onClose();
                     }}
-                    className="px-3 py-1 text-xs font-semibold bg-forge-accent text-white rounded-full hover:bg-forge-accentHover"
+                    className="px-3 py-1 text-xs font-semibold bg-accent text-white rounded-sm hover:bg-accent-hover"
                   >
                     Insert Draft
                   </button>
                 )}
               </div>
             </div>
-            <p className="text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line bg-white p-4 rounded-2xl border border-slate-100">
+            <p className="text-xs text-ink leading-relaxed font-sans whitespace-pre-line bg-surface p-4 rounded-md border border-line">
               {generatedDraft}
             </p>
           </div>

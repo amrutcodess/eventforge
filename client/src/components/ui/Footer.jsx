@@ -1,32 +1,32 @@
 import React from 'react';
-import { Layers, Github, Twitter, Linkedin, Shield } from 'lucide-react';
+import { Layers, Shield } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-forge-dark text-white border-t border-forge-darkBorder pt-16 pb-12 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          
-          <div className="md:col-span-1 flex flex-col gap-4">
+    <footer className="section-dark font-sans">
+      <div className="gutter">
+        <div className="grid grid-cols-1 gap-12 pb-12 md:grid-cols-4">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-forge-accent flex items-center justify-center">
-                <Layers className="w-5 h-5 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-none bg-accent">
+                <Layers className="h-5 w-5 text-white" />
               </div>
-              <span className="font-serif text-2xl font-bold tracking-tight">
-                EVENT<span className="text-forge-gold">FORGE</span>
+              <span className="font-display text-2xl tracking-tight text-white">
+                EVENTFORGE
               </span>
             </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Production-grade corporate event & conference platform for high-impact summits, workshops, and exhibitions.
+            <p className="text-body-sm text-white/70">
+              Production-grade corporate event and conference platform for high-impact
+              summits, workshops and exhibitions.
             </p>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Platform Roles</h4>
-            <ul className="space-y-2.5 text-sm text-slate-300">
+            <h4 className="eyebrow mb-4 text-white/50">Platform Roles</h4>
+            <ul className="space-y-2.5 text-sm text-white/70">
               <li>Platform Admin</li>
               <li>Event Organizer</li>
-              <li>Event Staff & Operations</li>
+              <li>Event Staff &amp; Operations</li>
               <li>Speaker Portal</li>
               <li>Attendee Management</li>
               <li>Sponsor Deliverables</li>
@@ -34,35 +34,34 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Core Engine</h4>
-            <ul className="space-y-2.5 text-sm text-slate-300">
+            <h4 className="eyebrow mb-4 text-white/50">Core Engine</h4>
+            <ul className="space-y-2.5 text-sm text-white/70">
               <li>Session Conflict Scheduler</li>
               <li>QR Code Scanner Check-in</li>
-              <li>AI Copy & Summaries</li>
+              <li>AI Copy &amp; Summaries</li>
               <li>AI Session Matcher</li>
               <li>Recharts Analytics</li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Compliance</h4>
-            <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
-              <Shield className="w-4 h-4 text-emerald-400" />
+            <h4 className="eyebrow mb-4 text-white/50">Compliance</h4>
+            <div className="mb-3 flex items-center gap-2 text-xs text-white/70">
+              <Shield className="h-4 w-4 text-accent" />
               <span>Role-Based Event Authorization</span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-white/50">
               © 2026 EVENTFORGE. Production Capstone Project. All rights reserved.
             </p>
           </div>
-
         </div>
 
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>Built with MERN Stack + Three.js + TailwindCSS.</p>
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-night-line pt-8 text-xs text-white/50 sm:flex-row">
+          <p>Built with the MERN stack and TailwindCSS.</p>
           <div className="flex items-center gap-4">
-            <span className="hover:text-white cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-white cursor-pointer">Terms of Service</span>
-            <span className="hover:text-white cursor-pointer">Security Spec</span>
+            <span className="cursor-pointer transition-colors hover:text-white">Privacy Policy</span>
+            <span className="cursor-pointer transition-colors hover:text-white">Terms of Service</span>
+            <span className="cursor-pointer transition-colors hover:text-white">Security Spec</span>
           </div>
         </div>
       </div>

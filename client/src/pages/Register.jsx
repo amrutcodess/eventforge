@@ -41,99 +41,106 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-forge-bg text-slate-900 font-sans flex items-center justify-center p-4 py-12">
-      <Card className="w-full max-w-lg p-8 border border-slate-200 shadow-2xl">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-2xl bg-forge-accent flex items-center justify-center">
-            <Layers className="w-5 h-5 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-8 py-16 text-ink">
+      <Card hover={false} className="w-full max-w-lg p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-none bg-accent">
+            <Layers className="h-5 w-5 text-white" />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-slate-900">Create EventForge Account</h1>
+          <h1 className="font-display text-3xl leading-none text-ink">
+            CREATE AN ACCOUNT
+          </h1>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-50 text-rose-700 text-xs font-medium">
+          <div className="mb-4 rounded-md bg-danger-soft p-3 text-xs font-medium text-danger">
             {error}
           </div>
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+            <label className="eyebrow mb-2 block text-ink-muted">Full Name</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
               placeholder="Elena Rostova"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+            <label className="eyebrow mb-2 block text-ink-muted">Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="elena@neuraldynamics.io"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+            <label className="eyebrow mb-2 block text-ink-muted">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="At least 6 characters"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Company</label>
+              <label className="eyebrow mb-2 block text-ink-muted">Company</label>
               <input
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder="Neural Dynamics"
-                className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+                className="field"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Title</label>
+              <label className="eyebrow mb-2 block text-ink-muted">Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="VP of AI"
-                className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+                className="field"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Topic Interests (For AI Recommendations)</label>
+            <label className="eyebrow mb-2 block text-ink-muted">
+              Topic Interests (for AI recommendations)
+            </label>
             <input
               type="text"
               value={interests}
               onChange={(e) => setInterests(e.target.value)}
               placeholder="Comma separated topics"
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-forge-accent"
+              className="field"
             />
           </div>
 
-          <Button type="submit" disabled={loading} variant="primary" className="w-full mt-2">
-            {loading ? 'Creating Account...' : 'Register Account'}
+          <Button type="submit" disabled={loading} variant="primary" className="mt-2 w-full">
+            {loading ? 'Creating account…' : 'Register Account'}
           </Button>
         </form>
 
-        <p className="text-xs text-slate-500 text-center mt-6">
-          Already registered? <Link to="/login" className="text-forge-accent font-bold hover:underline">Sign In</Link>
+        <p className="mt-6 text-center text-xs text-ink-muted">
+          Already registered?{' '}
+          <Link to="/login" className="font-semibold text-accent hover:underline">
+            Sign In
+          </Link>
         </p>
       </Card>
     </div>

@@ -113,7 +113,7 @@ export const SpeakerDashboard = () => {
   };
 
   if (loading) {
-    return <div className="h-64 rounded-3xl bg-slate-100 animate-pulse" />;
+    return <div className="h-64 rounded-md bg-surface-muted animate-pulse" />;
   }
 
   if (!activeProfile) {
@@ -121,12 +121,12 @@ export const SpeakerDashboard = () => {
       <div className="space-y-8 font-sans">
         <div>
           <Badge variant="gold">SPEAKER PORTAL</Badge>
-          <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Speaker Workstation</h1>
+          <h1 className="font-display text-h2 uppercase text-ink mt-1">Speaker Workstation</h1>
         </div>
         <Card className="p-12 text-center">
-          <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="font-serif text-xl font-bold text-slate-900">No Speaker Profile Linked</h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <User className="w-12 h-12 text-ink-muted mx-auto mb-3" />
+          <h3 className="text-h3 font-semibold text-ink">No Speaker Profile Linked</h3>
+          <p className="text-body-sm text-ink-muted mt-1">
             Your account is not yet linked to a speaker record. An event organizer can add you from the
             event's speaker roster.
           </p>
@@ -139,16 +139,16 @@ export const SpeakerDashboard = () => {
     <div className="space-y-8 font-sans">
       <div>
         <Badge variant="gold">SPEAKER PORTAL</Badge>
-        <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">Speaker Workstation</h1>
-        <p className="text-xs text-slate-500">Manage your profile bio, assigned sessions, and presentation material</p>
+        <h1 className="font-display text-h2 uppercase text-ink mt-1">Speaker Workstation</h1>
+        <p className="text-body-sm text-ink-muted">Manage your profile bio, assigned sessions, and presentation material</p>
       </div>
 
       {status && (
         <div
-          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
+          className={`p-4 rounded-md text-xs font-semibold flex items-center gap-2 border ${
             status.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
+              ? 'bg-success-soft border-success/30 text-success'
+              : 'bg-danger-soft border-danger/30 text-danger'
           }`}
         >
           {status.type === 'success' ? (
@@ -175,12 +175,12 @@ export const SpeakerDashboard = () => {
           <img
             src={activeProfile.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'}
             alt={activeProfile.name}
-            className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-forge-accent shadow-forge-soft"
+            className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-accent"
           />
           <div>
-            <h2 className="font-serif text-xl font-bold text-slate-900">{activeProfile.name}</h2>
-            <p className="text-xs font-semibold text-forge-accent">{activeProfile.title}</p>
-            <p className="text-xs text-slate-500">{activeProfile.company}</p>
+            <h2 className="text-h3 font-semibold text-ink">{activeProfile.name}</h2>
+            <p className="text-xs font-semibold text-accent">{activeProfile.title}</p>
+            <p className="text-body-sm text-ink-muted">{activeProfile.company}</p>
           </div>
 
           {activeProfile.topicTags?.length > 0 && (
@@ -188,7 +188,7 @@ export const SpeakerDashboard = () => {
               {activeProfile.topicTags.map((tag, i) => (
                 <span
                   key={i}
-                  className="text-[10px] font-semibold bg-forge-warmGrey text-slate-700 px-2.5 py-1 rounded-full"
+                  className="text-[10px] font-semibold bg-surface-muted text-ink-muted px-2.5 py-1 rounded-sm"
                 >
                   {tag}
                 </span>
@@ -196,14 +196,14 @@ export const SpeakerDashboard = () => {
             </div>
           )}
 
-          <div className="text-left pt-3 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          <div className="text-left pt-3 border-t border-line">
+            <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-1">
               Speaker Bio
             </label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-forge-accent h-28"
+              className="field h-28"
             />
             <Button
               size="sm"
@@ -222,27 +222,27 @@ export const SpeakerDashboard = () => {
         <div className="md:col-span-7 space-y-6">
           <Card className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-serif text-xl font-bold text-slate-900">Assigned Sessions</h3>
+              <h3 className="text-h3 font-semibold text-ink">Assigned Sessions</h3>
               <Badge variant="accent">{sessions.length} TOTAL</Badge>
             </div>
 
             {sessions.length === 0 ? (
-              <p className="text-xs text-slate-500">You have not been assigned to any sessions yet.</p>
+              <p className="text-body-sm text-ink-muted">You have not been assigned to any sessions yet.</p>
             ) : (
               sessions.map((sess) => (
-                <div key={sess._id} className="p-4 rounded-2xl bg-forge-warmGrey/60 border border-slate-200 space-y-3">
+                <div key={sess._id} className="p-4 rounded-md bg-surface-muted border border-line space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <h4 className="font-serif font-bold text-base text-slate-900">{sess.title}</h4>
+                    <h4 className="font-semibold text-base text-ink">{sess.title}</h4>
                     <Badge variant="accent">{sess.track}</Badge>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-ink-muted">
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-forge-accent" />
+                      <MapPin className="w-3.5 h-3.5 text-accent" />
                       {sess.roomName}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-forge-accent" />
+                      <Clock className="w-3.5 h-3.5 text-accent" />
                       {new Date(sess.startTime).toLocaleString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -253,8 +253,8 @@ export const SpeakerDashboard = () => {
                   </div>
 
                   {sess.resources?.length > 0 && (
-                    <div className="pt-2 border-t border-slate-200 space-y-1">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="pt-2 border-t border-line space-y-1">
+                      <p className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">
                         Attached Material
                       </p>
                       {sess.resources.map((r, i) => (
@@ -263,7 +263,7 @@ export const SpeakerDashboard = () => {
                           href={r.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-2 text-xs font-semibold text-forge-accent hover:underline"
+                          className="flex items-center gap-2 text-xs font-semibold text-accent hover:underline"
                         >
                           <FileText className="w-3.5 h-3.5" />
                           {r.title}
