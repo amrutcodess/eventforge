@@ -44,13 +44,23 @@ app.use(
 );
 
 // Health check — deliberately registered before the database middleware so that
-// connectivity can be diagnosed even when the database is unreachable.
-app.get('/api/health', (req, res) => {
+// connectivity can be diagnosed even when the database is unreachable. It attempts a
+// connection rather than only reading the current state: on a serverless cold start
+// nothing has connected yet, so a state-only check would report "disconnected" even
+// when the database is perfectly healthy.
+app.get('/api/health', async (req, res) => {
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  let databaseError = null;
+  try {
+    await connectDB();
+  } catch (err) {
+    databaseError = err.message;
+  }
   res.json({
     status: 'healthy',
     platform: 'EventForge API v1.0',
     database: states[mongoose.connection.readyState] || 'unknown',
+    ...(databaseError ? { databaseError } : {}),
     time: new Date()
   });
 });
