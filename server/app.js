@@ -23,6 +23,7 @@ import sessionRoutes from './routes/sessions.js';
 import sponsorRoutes from './routes/sponsors.js';
 import announcementRoutes from './routes/announcements.js';
 import aiRoutes from './routes/ai.js';
+import statsRoutes from './routes/stats.js';
 import analyticsRoutes from './routes/analytics.js';
 import uploadRoutes from './routes/upload.js';
 
@@ -95,6 +96,7 @@ app.use('/api/events', sessionRoutes);
 app.use('/api/events', sponsorRoutes);
 app.use('/api/events', announcementRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/stats', statsRoutes);
 app.use('/api/events', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 

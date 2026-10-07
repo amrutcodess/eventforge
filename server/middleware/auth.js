@@ -23,6 +23,34 @@ export const protect = async (req, res, next) => {
   }
 };
 
+/**
+ * Like `protect`, but an absent or invalid token is not an error.
+ *
+ * Exists for endpoints that are useful signed-out but richer signed-in — the Forge Assistant
+ * being the case this was written for. It sets `req.user` when the token is good and falls
+ * through silently otherwise, so downstream visibility can widen for a known caller without
+ * the endpoint requiring one.
+ *
+ * A bad token is treated exactly like no token. It must never 401, and it must never be
+ * partially trusted: a malformed JWT is not evidence of anything.
+ */
+export const optionalAuth = async (req, res, next) => {
+  const header = req.headers.authorization;
+  if (header && header.startsWith('Bearer')) {
+    try {
+      const decoded = jwt.verify(
+        header.split(' ')[1],
+        process.env.JWT_SECRET || 'eventforge_super_secret_jwt_key_2026_capstone'
+      );
+      const user = await User.findById(decoded.id).select('-passwordHash');
+      if (user) req.user = user;
+    } catch {
+      // Deliberately silent. Anonymous is a supported state here.
+    }
+  }
+  next();
+};
+
 export const requireGlobalAdmin = (req, res, next) => {
   if (req.user && req.user.globalRole === 'admin') {
     return next();

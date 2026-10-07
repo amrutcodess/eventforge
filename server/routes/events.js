@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { Event } from '../models/Event.js';
 import { Venue } from '../models/Venue.js';
 import { TicketCategory } from '../models/TicketCategory.js';
@@ -29,9 +30,39 @@ router.get('/', async (req, res, next) => {
     const events = await Event.find(query)
       .populate('venueId', 'name city country')
       .populate('orgId', 'name logo')
-      .sort({ startDate: 1 });
+      .sort({ startDate: 1 })
+      .lean();
 
-    res.json(events);
+    // `minPrice` and `sessionCount` are attached here because the marketing pages need them and
+    // used to invent them (a hardcoded "$149" on the featured-event cards). Two grouped
+    // aggregates rather than a query per event, and both are real numbers straight from the
+    // ticket tiers and the programme.
+    const ids = events.map((e) => e._id);
+    const [priceRows, sessionRows] = await Promise.all([
+      TicketCategory.aggregate([
+        { $match: { eventId: { $in: ids } } },
+        { $group: { _id: '$eventId', minPrice: { $min: '$price' }, ticketCount: { $sum: 1 } } }
+      ]),
+      Session.aggregate([
+        { $match: { eventId: { $in: ids } } },
+        { $group: { _id: '$eventId', sessionCount: { $sum: 1 } } }
+      ])
+    ]);
+
+    const prices = new Map(priceRows.map((r) => [String(r._id), r]));
+    const sessionCounts = new Map(sessionRows.map((r) => [String(r._id), r.sessionCount]));
+
+    res.json(
+      events.map((e) => {
+        const pricing = prices.get(String(e._id));
+        return {
+          ...e,
+          minPrice: pricing ? pricing.minPrice : null,
+          ticketCount: pricing ? pricing.ticketCount : 0,
+          sessionCount: sessionCounts.get(String(e._id)) || 0
+        };
+      })
+    );
   } catch (err) {
     next(err);
   }

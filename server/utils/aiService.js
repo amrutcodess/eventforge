@@ -1,100 +1,88 @@
-import OpenAI from 'openai';
-
-let openaiClient = null;
-if (process.env.OPENAI_API_KEY) {
-  openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
+import { writeDraft } from './ai/features/draft.js';
+import { askLLM } from './ai/provider.js';
+import { llmOrFallback } from './ai/orchestrate.js';
+import { interestScore } from './ai/scheduler.js';
 
 /**
- * Generate AI Content Draft (Event Description, Speaker Bio, Session Summary, Announcement)
+ * Facade over the AI layer, kept because two callers predate it: `routes/ai.js` and the
+ * `test_system.js` suite. Both signatures are unchanged — `generateAIDraft` returns a string,
+ * `recommendSessionsForAttendee` returns an array of session objects — so nothing that
+ * already depends on this file needed to be touched.
+ *
+ * New code should import from `utils/ai/*` directly and get the richer envelope (source,
+ * degraded) that these two cannot express without breaking their contract.
  */
-export const generateAIDraft = async ({ type, title, keywords, context }) => {
-  if (openaiClient) {
-    try {
-      const prompt = `You are an expert corporate event copywriter. Generate a high-converting, professional draft for a ${type}.
-Title/Topic: "${title}"
-Key details / Keywords: "${keywords || 'Industry leaders, emerging trends, innovation'}"
-Context: "${context || 'Annual tech conference'}"
 
-Return a polished text output ready for publication. Keep tone modern, authoritative, and engaging.`;
+/**
+ * @returns {Promise<string>} The draft copy itself.
+ */
+export const generateAIDraft = async ({ type, title, keywords, context, eventId, scope } = {}) => {
+  const { draft } = await writeDraft({ type, title, keywords, context, eventId, scope });
+  return draft;
+};
 
-      const response = await openaiClient.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 400
-      });
-
-      return response.choices[0].message.content.trim();
-    } catch (err) {
-      console.warn('OpenAI API call failed, using fallback generator:', err.message);
-    }
-  }
-
-  // Fallback generator if no OpenAI key provided
-  const kw = keywords || 'innovation, industry transformation, executive networking';
-  switch (type) {
-    case 'event_description':
-      return `Welcome to ${title || 'EventForge Summit'}, the premier gathering for industry leaders, technical pioneers, and forward-thinking executives. Over two immersive days, explore cutting-edge breakthroughs in ${kw}. Connect with key decision-makers, participate in hands-on technical workshops, and gain strategic insights to elevate your organization.`;
-
-    case 'speaker_bio':
-      return `${title || 'Distinguished Speaker'} is a visionary technology leader with over 15 years of experience driving transformation across enterprise organizations. Passionate about ${kw}, they regularly advise Fortune 500 companies on strategic growth and technology adoption.`;
-
-    case 'session_summary':
-      return `In this session on "${title || 'Future Trends'}", attendees will gain practical frameworks for navigating ${kw}. Discover actionable methodologies, real-world case studies, and key metrics to measure success in modern corporate environments.`;
-
-    case 'announcement':
-      return `📢 **Important Update regarding ${title || 'Event Schedule'}**\n\nWe are thrilled to announce exciting additions to our upcoming program focusing on ${kw}. Please check your personalized dashboard schedule for room updates and session materials.`;
-
-    default:
-      return `Professional summary for ${title} focusing on ${kw}. Designed for high-impact enterprise engagement.`;
-  }
+/** Interest-weighted ranking over whatever the caller supplied. */
+const rankByInterests = (interests, sessions, limit = 4) => {
+  if (!interests.length) return sessions.slice(0, 3);
+  return sessions
+    .map((session) => ({ session, score: interestScore(session, interests) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => entry.session);
 };
 
 /**
- * AI Session Recommendation Engine based on attendee profile + interests
+ * @returns {Promise<Array>} Session objects, most relevant first.
  */
 export const recommendSessionsForAttendee = async (attendeeInterests = [], availableSessions = []) => {
-  if (!availableSessions || availableSessions.length === 0) return [];
+  if (!Array.isArray(availableSessions) || availableSessions.length === 0) return [];
 
-  if (openaiClient) {
-    try {
-      const prompt = `Given an attendee interested in: [${attendeeInterests.join(', ')}]
-And the following list of available sessions:
-${JSON.stringify(availableSessions.map(s => ({ id: s._id, title: s.title, summary: s.summary, track: s.track, tags: s.tags })))}
+  const interests = (Array.isArray(attendeeInterests) ? attendeeInterests : [])
+    .map((i) => String(i).trim())
+    .filter(Boolean);
 
-Rank the top 3-5 session IDs most relevant to this attendee. Return ONLY a valid JSON array of object IDs like: ["id1", "id2", "id3"].`;
-
-      const response = await openaiClient.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
+  const result = await llmOrFallback({
+    feature: 'recommend',
+    primary: async () => {
+      const asked = await askLLM({
+        json: true,
         temperature: 0.3,
-        response_format: { type: 'json_object' }
+        maxTokens: 300,
+        system: 'You rank conference sessions for an attendee. You return only JSON.',
+        user:
+          `An attendee is interested in: [${interests.join(', ') || 'no stated interests'}].\n\n` +
+          `Available sessions:\n` +
+          availableSessions
+            .map(
+              (s) =>
+                `- id: ${s._id} | title: ${s.title} | track: ${s.track || 'General'} | ` +
+                `summary: ${String(s.summary || '').slice(0, 160)} | ` +
+                // `track` and the speaker topics are the real signal here. The previous
+                // version of this prompt sent `s.tags`, but Session has no tags field, so it
+                // was always undefined and the model was ranking on title alone.
+                `speakers: ${(s.speakerIds || []).map((p) => (typeof p === 'object' ? p?.name : '')).filter(Boolean).join(', ') || 'none'}`
+            )
+            .join('\n') +
+          `\n\nReturn the 3-5 most relevant session ids as JSON: {"sessionIds": ["<id>", "<id>"]}`
       });
 
-      const parsed = JSON.parse(response.choices[0].message.content);
-      const recommendedIds = Array.isArray(parsed) ? parsed : (parsed.recommendedIds || parsed.sessionIds || []);
-      return availableSessions.filter(s => recommendedIds.includes(s._id.toString()));
-    } catch (err) {
-      console.warn('AI Recommendation API call failed, using heuristic match:', err.message);
-    }
-  }
+      if (!asked.ok) return asked;
 
-  // Heuristic matching fallback
-  const userInterestsLower = attendeeInterests.map(i => i.toLowerCase());
-  if (userInterestsLower.length === 0) {
-    return availableSessions.slice(0, 3); // return first 3 if no interests specified
-  }
-
-  const scoredSessions = availableSessions.map(session => {
-    let score = 0;
-    const textToMatch = `${session.title} ${session.summary} ${session.track} ${session.description}`.toLowerCase();
-    userInterestsLower.forEach(interest => {
-      if (textToMatch.includes(interest)) score += 3;
-    });
-    return { session, score };
+      // The prompt asks for an object with a named key. The previous version asked for a bare
+      // array while setting response_format to json_object, which requires an object — so the
+      // model was being given contradictory instructions.
+      const ids = asked.data?.sessionIds;
+      if (!Array.isArray(ids) || ids.length === 0) return { ok: false, reason: 'unusable' };
+      return asked;
+    },
+    fallback: () => rankByInterests(interests, availableSessions)
   });
 
-  scoredSessions.sort((a, b) => b.score - a.score);
-  return scoredSessions.slice(0, 4).map(item => item.session);
+  if (result.source === 'llm') {
+    const byId = new Map(availableSessions.map((s) => [String(s._id), s]));
+    const picked = (result.value?.sessionIds || []).map((id) => byId.get(String(id))).filter(Boolean);
+    if (picked.length) return picked;
+  }
+
+  return rankByInterests(interests, availableSessions);
 };
