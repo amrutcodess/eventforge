@@ -197,8 +197,8 @@ export const OrganizerDashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={timelineData.length > 0 ? timelineData : [{ date: 'Day 1', registrations: 12 }, { date: 'Day 2', registrations: 45 }, { date: 'Day 3', registrations: 89 }]}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartTheme.axis }} />
-                <YAxis tick={{ fontSize: 11, fill: chartTheme.axis }} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.grid }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: chartTheme.axis }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Area type="monotone" dataKey="registrations" stroke={chartTheme.accent} fill={chartTheme.accent} fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
@@ -213,8 +213,8 @@ export const OrganizerDashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sessionStats.length > 0 ? sessionStats : [{ title: 'Keynote', attendees: 120 }, { title: 'Cloud', attendees: 85 }]}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
-                <XAxis dataKey="title" tick={{ fontSize: 10, fill: chartTheme.axis }} />
-                <YAxis tick={{ fontSize: 11, fill: chartTheme.axis }} />
+                <XAxis dataKey="title" tick={{ fontSize: 10, fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.grid }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: chartTheme.axis }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={chartTooltipStyle} />
                 <Bar dataKey="attendees" fill={chartTheme.accent} radius={[6, 6, 0, 0]} />
               </BarChart>
