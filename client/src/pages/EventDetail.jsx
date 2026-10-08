@@ -5,9 +5,10 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
+import { EmptyState } from '../components/ui/EmptyState';
 import { EventBrief } from '../components/ai/EventBrief';
 import { useAssistantContext } from '../context/AssistantContext';
-import { Calendar, MapPin, Clock, Ticket, Check, ShieldCheck, FileText, Megaphone } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, Check, ShieldCheck, FileText, Megaphone, Mic, Award } from 'lucide-react';
 import api from '../utils/api';
 
 export const EventDetail = () => {
@@ -406,7 +407,11 @@ export const EventDetail = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-sm text-ink-muted">No sessions published yet.</p>
+              <EmptyState
+                icon={Calendar}
+                title="No sessions published yet"
+                body="The programme for this event has not been released. Sessions will appear here as soon as the organizer publishes them."
+              />
             )}
           </div>
         )}
@@ -442,7 +447,11 @@ export const EventDetail = () => {
                 </Card>
               ))
             ) : (
-              <p className="text-sm text-ink-muted">No speakers announced yet.</p>
+              <EmptyState
+                icon={Mic}
+                title="No speakers announced yet"
+                body="Speaker profiles appear here once they are added to the programme, along with the sessions they are on."
+              />
             )}
           </div>
         )}
@@ -451,50 +460,74 @@ export const EventDetail = () => {
         {activeTab === 'tickets' && (
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
             {tickets && tickets.length > 0 ? (
-              tickets.map((tkt) => (
-                <Card key={tkt._id} className="flex flex-col justify-between p-8">
-                  <div>
-                    <Badge variant="accent">{tkt.name}</Badge>
-                    <div className="mb-2 mt-5 flex items-baseline gap-2">
-                      <span className="font-display text-4xl text-outline text-ink">
-                        ${tkt.price}
-                      </span>
-                      <span className="text-xs text-ink-muted">/ pass</span>
-                    </div>
-                    <p className="mb-6 text-xs leading-relaxed text-ink-muted">
-                      {tkt.description}
-                    </p>
+              tickets.map((tkt) => {
+                // Real availability, straight off the tier. This replaced three bullet points —
+                // "Access to keynote sessions", "Encrypted digital QR badge", "Networking lounge
+                // & catering" — that were hardcoded and therefore printed identically under a
+                // $499 executive pass and a $149 lab pass, contradicting the tier's own
+                // description directly above them.
+                const hasCapacity = typeof tkt.capacity === 'number';
+                const remaining = hasCapacity
+                  ? Math.max(tkt.capacity - (tkt.quantitySold || 0), 0)
+                  : null;
+                const soldOut = hasCapacity && remaining === 0;
 
-                    <div className="mb-8 space-y-2 text-xs text-ink-muted">
-                      <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-accent" />
-                        Access to keynote sessions
+                return (
+                  <Card key={tkt._id} className="flex flex-col justify-between p-8">
+                    <div>
+                      <Badge variant="accent">{tkt.name}</Badge>
+                      <div className="mb-2 mt-5 flex items-baseline gap-2">
+                        <span className="font-display text-4xl text-outline text-ink">
+                          ${tkt.price}
+                        </span>
+                        <span className="text-xs text-ink-muted">/ pass</span>
+                      </div>
+                      <p className="mb-6 text-xs leading-relaxed text-ink-muted">
+                        {tkt.description}
                       </p>
-                      <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-accent" />
-                        Encrypted digital QR badge
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-accent" />
-                        Networking lounge &amp; catering
-                      </p>
-                    </div>
-                  </div>
 
-                  <Button
-                    onClick={() => {
-                      setSelectedTicket(tkt);
-                      setCheckoutModalOpen(true);
-                    }}
-                    variant="primary"
-                    className="w-full"
-                  >
-                    Select {tkt.name}
-                  </Button>
-                </Card>
-              ))
+                      <div className="mb-8 space-y-2 text-xs text-ink-muted">
+                        {hasCapacity && (
+                          <p className="flex items-center gap-2">
+                            <Check className="h-4 w-4 shrink-0 text-accent" />
+                            {soldOut
+                              ? 'Sold out'
+                              : `${remaining} of ${tkt.capacity} seats remaining`}
+                          </p>
+                        )}
+                        <p className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-accent" />
+                          Unique QR pass issued on registration
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-accent" />
+                          {tkt.requiresApproval
+                            ? 'Registration requires organizer approval'
+                            : 'Confirmed instantly on checkout'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => {
+                        setSelectedTicket(tkt);
+                        setCheckoutModalOpen(true);
+                      }}
+                      disabled={soldOut}
+                      variant="primary"
+                      className="w-full"
+                    >
+                      {soldOut ? `${tkt.name} — sold out` : `Select ${tkt.name}`}
+                    </Button>
+                  </Card>
+                );
+              })
             ) : (
-              <p className="text-sm text-ink-muted">No ticket passes available.</p>
+              <EmptyState
+                icon={Ticket}
+                title="No passes on sale yet"
+                body="Ticket tiers have not been published for this event. They will appear here once registration opens."
+              />
             )}
           </div>
         )}
@@ -533,7 +566,11 @@ export const EventDetail = () => {
                   </Card>
                 ))
               ) : (
-                <p className="text-sm text-ink-muted">No sponsors listed.</p>
+                <EmptyState
+                  icon={Award}
+                  title="No sponsors listed"
+                  body="Partner packages for this event have not been published yet."
+                />
               )}
             </div>
           </div>

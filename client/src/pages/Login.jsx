@@ -1,18 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { CountUp } from '../components/motion/CountUp';
 import { Layers, Shield, Lock, Mail } from 'lucide-react';
+import api from '../utils/api';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // The demo roles are only worth clicking if there is something behind them. These are the same
+  // public aggregates the landing page shows, and a failure here just drops the strip.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/stats/public')
+      .then((res) => {
+        if (!cancelled) setStats(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e?.preventDefault();
@@ -111,7 +129,7 @@ export const Login = () => {
 
           <p className="mt-6 text-center text-xs text-ink-muted">
             Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-accent hover:underline">
+            <Link to="/register" className="link-sweep font-semibold text-accent">
               Create Account
             </Link>
           </p>
@@ -142,6 +160,36 @@ export const Login = () => {
               </button>
             ))}
           </div>
+
+          {/* Real counts, so the demo roles are not opening an empty workspace. */}
+          {stats && (
+            <div className="grid grid-cols-3 gap-px border border-line bg-line">
+              {[
+                { value: stats.events, label: 'Programmes' },
+                { value: stats.sessions, label: 'Sessions' },
+                { value: stats.registrations, label: 'Registrations' }
+              ].map((tile) => (
+                <div key={tile.label} className="min-w-0 bg-surface px-2 py-5 text-center sm:px-4">
+                  <p className="font-display text-3xl text-outline text-ink">
+                    <CountUp value={tile.value} />
+                  </p>
+                  {/* `min-w-0` on the cell and `break-words` here are the difference between
+                      fitting a phone and pushing the document 11px wide: a grid item's automatic
+                      minimum is its min-content width, and "REGISTRATIONS" in tracked uppercase
+                      is wider than a third of a 375px screen. */}
+                  <p className="eyebrow mt-2 break-words text-ink-muted">{tile.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs leading-relaxed text-ink-muted">
+            The demo accounts are public and shared — see{' '}
+            <Link to="/legal#terms" className="link-sweep font-semibold text-accent">
+              Terms of Use
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>

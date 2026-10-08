@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { EmptyState } from '../components/ui/EmptyState';
 import { QrCode, Sparkles, Star, Calendar, CheckCircle, Clock, User } from 'lucide-react';
 import api from '../utils/api';
 
@@ -147,23 +148,44 @@ export const TicketPass = () => {
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {recommendedSessions.map((sess) => (
-              <Card key={sess._id}>
-                <Badge variant="neutral">{sess.track}</Badge>
-                <h3 className="mt-4 text-h3 font-semibold text-ink">{sess.title}</h3>
-                <p className="my-3 line-clamp-2 text-body-sm text-ink-muted">{sess.summary}</p>
-                <div className="flex items-center gap-2 border-t border-line pt-4 text-xs text-ink-muted">
-                  <Clock className="h-4 w-4 text-accent" />
-                  <span>
-                    {new Date(sess.startTime).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <span>· Room: {sess.roomName}</span>
-                </div>
-              </Card>
-            ))}
+            {recommendedSessions.length > 0 ? (
+              recommendedSessions.map((sess) => (
+                <Card key={sess._id}>
+                  <Badge variant="neutral">{sess.track}</Badge>
+                  <h3 className="mt-4 text-h3 font-semibold text-ink">{sess.title}</h3>
+                  <p className="my-3 line-clamp-2 text-body-sm text-ink-muted">{sess.summary}</p>
+                  <div className="flex items-center gap-2 border-t border-line pt-4 text-xs text-ink-muted">
+                    <Clock className="h-4 w-4 text-accent" />
+                    <span>
+                      {new Date(sess.startTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                    <span>· Room: {sess.roomName}</span>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              // The grid previously had no empty branch at all, so a matcher that returned
+              // nothing rendered a heading, a subtitle and then blank space.
+              <EmptyState
+                icon={Sparkles}
+                title="No matches yet"
+                body={
+                  user?.interests?.length
+                    ? `Nothing on this event's programme lines up with ${user.interests.join(', ')} yet. The programme is still being built — check back, or ask the assistant what is on.`
+                    : 'Add a few topic interests to your profile and the matcher will line sessions up against them.'
+                }
+                action={
+                  <Link to="/dashboard">
+                    <Button variant="secondary" size="sm">
+                      Update your interests
+                    </Button>
+                  </Link>
+                }
+              />
+            )}
           </div>
         </section>
 
