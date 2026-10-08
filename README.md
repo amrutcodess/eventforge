@@ -1,6 +1,6 @@
 # EVENTFORGE — Corporate Event & Conference Management Platform
 
-[![Stack](https://img.shields.io/badge/Stack-MERN-2D4A3E?style=for-the-badge)](https://github.com/amrutcodess/eventforge)
+[![Stack](https://img.shields.io/badge/Stack-MERN-C0003C?style=for-the-badge)](https://github.com/amrutcodess/eventforge)
 [![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-24.x-green?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-emerald?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
@@ -8,16 +8,17 @@
 
 **EVENTFORGE** is a production-grade full-stack MERN application engineered for organizing and managing enterprise corporate events, technical summits, masterclass workshops, and partner exhibitions.
 
-Designed with a premium agency-portfolio aesthetic, EventForge features 6-tier role-scoped authorization, dynamic room conflict resolution, live encrypted QR badge check-ins, server-side OpenAI copy generation, sponsor deliverable tracking, and interactive Recharts analytics.
+Designed with a premium agency-portfolio aesthetic, EventForge features 6-tier role-scoped authorization, dynamic room conflict resolution, live encrypted QR badge check-ins, a provider-agnostic server-side AI layer, sponsor deliverable tracking, and interactive Recharts analytics.
 
 ---
 
 ## 🎨 Visual Language & Design System
 
-- **Color Palette**: Near-black / deep charcoal hero sections (`#0F1715`, `#16221D`), off-white content surfaces (`#F8F9FA`, `#F4F4F0`), and a deep forest/olive green primary accent (`#2D4A3E` / `#21392E`).
-- **Typography**: Editorial Playfair Display serif headlines paired with clean geometric Plus Jakarta Sans for body text, navigation, and UI labels.
-- **3D Visual Centerpiece**: WebGL Three.js / React Three Fiber interactive metallic geometric centerpiece on marketing surfaces.
-- **UI Chrome**: Pill-shaped buttons with trailing icon-in-circle (`rounded-full`), soft rounded cards (18–24px radius), status availability badges (pulsing dot + label), and floating secondary cards.
+- **Color Palette**: A monochrome base — white (`#ffffff`), zinc-50 (`#fafafa`) and zinc-950 (`#09090b`) — carrying a **single crimson accent** (`#c0003c`, hover `#a00032`). There is no second hue anywhere, including status badges. The accent is a swappable source: its channels live on `:root` in `client/src/index.css`, so every accent surface — Recharts series included — moves together.
+- **Typography**: **Bebas Neue** condensed caps for display headlines over **Inter** for body text, navigation and UI labels.
+- **Layout**: Sections alternate background tone rather than being separated by divider lines. Buttons and cards are **square** (zero border radius) and media cards sit at 16px.
+- **Motion**: Lenis smooth scroll on public routes only (dashboards deliberately opt out), GSAP scroll reveals and animated headings, a seamless marquee, and a scroll progress bar. Every one of these is gated behind `prefers-reduced-motion`.
+- **Accessibility**: Accent and status tones are chosen against their actual background — `<Badge>` status text on dark surfaces uses the `.light` variant, because the default tones fall below 4.5:1 on `night`.
 - **Role Shells**: Platform Admin, Event Organizer, Event Staff, Speaker, Attendee, and Sponsor dashboards sharing a unified design system.
 
 ---
@@ -43,8 +44,8 @@ Authentication is backed by JWT tokens and a centralized permission resolver `ge
 
 1. **Automatic Session Conflict Detection**: Overlapping session bookings in the same room (`roomName`, `startTime`, `endTime`) trigger dynamic schedule conflict warnings specifying the room & conflicting session title.
 2. **QR Code Ticket Verification**: Generates high-density QR tokens & PNG data URIs. On-site staff scanner validates tickets against MongoDB and prevents duplicate entrance.
-3. **OpenAI Server-Side Integration**: Endpoint `/api/ai/draft-content` drafts event landing copy, speaker bios, and announcements with an intelligent fallback engine.
-4. **AI Session Recommendation Engine**: Endpoint `/api/ai/recommend-sessions` ranks available sessions against attendee profile topic interests (`user.interests`).
+3. **Provider-Agnostic AI Layer**: `server/utils/ai/` composes answers from live event records. Six endpoints — public `POST /api/ai/assistant` (the Forge Assistant on the marketing site) and `GET /api/ai/event-brief/:eventId`; authenticated `POST /api/ai/build-agenda`, `POST /api/ai/draft-content` and `POST /api/ai/recommend-sessions`; and organizer/staff-only `GET /api/ai/insights/:eventId`. Retrieval is scoped through `resolveScope`, so a public caller can never read a draft event or a privileged field.
+4. **Deterministic Fallback, Not Degradation**: Every AI feature has a non-LLM path that reads the same records the UI does, so the platform is fully functional with **no provider key at all**. Setting `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` upgrades the wording, not the availability. Requests are rate-limited and budgeted, and a failing provider falls back rather than propagating.
 5. **Sponsor Deliverables & Multer Uploads**: Real file upload API (`POST /api/upload`) with a MIME
    allowlist, used by sponsors to submit brand assets and by speakers to attach session material.
    Files land in `server/uploads/` locally and `/tmp/uploads` on Vercel (ephemeral — see
@@ -59,21 +60,23 @@ Authentication is backed by JWT tokens and a centralized permission resolver `ge
 eventforge/
 ├── client/                     # Frontend Vite + React 18 Application
 │   ├── src/
-│   │   ├── components/         # Design System (Button, Card, Badge, Modal, DataTable)
-│   │   │   ├── 3d/             # Three.js 3D Hero Centerpiece visual
+│   │   ├── components/         # Design System (Button, Card, Badge, Modal, DataTable, EmptyState)
+│   │   │   ├── ai/             # Forge Assistant widget & event brief
+│   │   │   ├── motion/         # Lenis smooth scroll, GSAP reveals, marquee, page transition
 │   │   │   ├── QRScannerModal  # Camera & Token Check-in Scanner
-│   │   │   └── AIModal         # OpenAI Content Draft Studio
+│   │   │   └── AIModal         # AI Content Draft Studio
 │   │   ├── context/            # AuthContext global state
-│   │   ├── pages/              # Landing, EventDetail, TicketPass, Login, Register
+│   │   ├── pages/              # Landing, EventDetail, TicketPass, Login, Register, Legal, NotFound
 │   │   └── pages/dashboards/   # Admin, Organizer, Staff, Speaker, Attendee, Sponsor shells
 ├── server/                     # Backend Express REST API
 │   ├── config/                 # Mongoose DB connection & MongoMemoryServer fallback
 │   ├── middleware/             # JWT auth & centralized eventAuth permission resolver
 │   ├── models/                 # User, Event, Venue, TicketCategory, Registration, Session, Attendance, Sponsor, Announcement
 │   ├── routes/                 # Express REST API routes & Multer file upload
-│   ├── utils/                  # QR Generator, AI Service engine
+│   ├── utils/                  # QR generator, and utils/ai/ — the AI features, scope resolver & budget
 │   ├── seed.js                 # Complete realistic demo dataset seeder
-│   └── test_system.js          # Automated verification test suite
+│   ├── test_system.js          # Automated verification test suite
+│   └── test_ai_units.js        # AI unit suite (visibility guard, fallbacks, budget)
 └── vercel.json                 # Monorepo full-stack Vercel deployment manifest
 ```
 
@@ -136,7 +139,8 @@ Run the automated verification test suite to validate database constraints, conf
 
 ```bash
 cd server
-node test_system.js
+npm run test:system   # database constraints, conflict scheduler, QR tokens, uploads
+npm run test:ai       # AI unit suite — visibility guard, fallbacks, budget (no DB or key needed)
 ```
 
 ---
@@ -155,7 +159,9 @@ as `/dashboard` and `/events/:slug` survive a hard refresh.
 | `MONGODB_URI` | ✅ **Yes** | MongoDB Atlas connection string, e.g. `mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/eventforge?retryWrites=true&w=majority`. Add your Vercel deployment's IPs to the Atlas network access list (`0.0.0.0/0` is simplest for a capstone). |
 | `JWT_SECRET` | ✅ **Yes** | Any long random string. Tokens signed with a different secret invalidate existing sessions. |
 | `NODE_ENV` | Recommended | Set to `production`. The server **refuses to boot** without `MONGODB_URI` in production rather than silently falling back to an ephemeral in-memory database. |
-| `OPENAI_API_KEY` | Optional | Without it, `/api/ai/*` transparently uses the built-in heuristic drafting/recommendation engine. |
+| `AI_BASE_URL` | Optional | Any OpenAI-compatible endpoint (Groq, OpenRouter, or a local Ollama). With all three AI vars unset, every `/api/ai/*` route uses the built-in deterministic engine instead. |
+| `AI_API_KEY` | Optional | Key for the provider in `AI_BASE_URL`. May be any non-empty string for a local Ollama. |
+| `AI_MODEL` | Optional | Model id for the provider, e.g. `llama-3.3-70b-versatile` on Groq. |
 | `PORT` | Optional | Local development only (default `5000`); ignored on Vercel. |
 
 Copy [`server/.env.example`](server/.env.example) to `server/.env` for local development.
