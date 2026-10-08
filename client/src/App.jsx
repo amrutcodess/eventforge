@@ -15,6 +15,8 @@ import { EventDetail } from './pages/EventDetail';
 import { TicketPass } from './pages/TicketPass';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Legal } from './pages/Legal';
+import { NotFound } from './pages/NotFound';
 import { DashboardContainer } from './pages/dashboards/DashboardContainer';
 
 /** Gate for authenticated-only routes; sends anonymous visitors to the login page. */
@@ -51,6 +53,7 @@ export function App() {
                   <Route path="/ticket-pass/:id" element={<TicketPass />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/legal" element={<Legal />} />
                   <Route
                     path="/dashboard"
                     element={
@@ -59,6 +62,9 @@ export function App() {
                       </RequireAuth>
                     }
                   />
+                  {/* Catch-all. Without it a mistyped URL rendered the navbar and footer around
+                      an empty div, which reads as a broken app rather than a missing page. */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </PageTransition>
             </div>

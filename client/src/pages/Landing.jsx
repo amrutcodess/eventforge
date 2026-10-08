@@ -514,7 +514,7 @@ export const Landing = () => {
       </section>
 
       {/* ── 4. CAPABILITIES — light. ── */}
-      <section className="section-light">
+      <section id="capabilities" className="section-light scroll-mt-24">
         <div className="gutter">
           <Reveal className="max-w-2xl">
             <Eyebrow>Engineered for enterprise</Eyebrow>
@@ -541,7 +541,7 @@ export const Landing = () => {
       </section>
 
       {/* ── 5. AI SPOTLIGHT — dark. The visible home of the AI story. ── */}
-      <section className="section-dark relative overflow-hidden">
+      <section id="ai" className="section-dark relative scroll-mt-24 overflow-hidden">
         <div
           className="pointer-events-none absolute -top-32 right-1/4 h-[480px] w-[480px] rounded-full blur-[140px]"
           style={{ backgroundColor: 'rgb(var(--accent) / 0.06)' }}
@@ -804,7 +804,7 @@ export const Landing = () => {
       </section>
 
       {/* ── 9. SECURITY — dark. Every claim here maps to a schema or a middleware. ── */}
-      <section className="section-dark">
+      <section id="security" className="section-dark scroll-mt-24">
         <div className="gutter">
           <div className="max-w-2xl">
             <Eyebrow>Access and integrity</Eyebrow>
@@ -831,7 +831,7 @@ export const Landing = () => {
 
       {/* ── 10. PASSES — light. Real tiers from the flagship summit's ticket record. ── */}
       {passes.length > 0 && (
-        <section className="section-light">
+        <section id="pricing" className="section-light scroll-mt-24">
           <div className="gutter">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div className="max-w-2xl">
@@ -874,7 +874,7 @@ export const Landing = () => {
 
       {/* ── 11. FAQ — the muted band. It sits next to the passes section, so it takes the third
              tone rather than repeating `canvas` and reading as one continuous block. ── */}
-      <section className="section-muted">
+      <section id="faq" className="section-muted scroll-mt-24">
         <div className="gutter">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
             <div className="lg:col-span-4">

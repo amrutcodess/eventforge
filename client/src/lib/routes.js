@@ -15,7 +15,8 @@ export const PUBLIC_ROUTES = [
   /^\/events\//,
   /^\/ticket-pass\//,
   /^\/login$/,
-  /^\/register$/
+  /^\/register$/,
+  /^\/legal$/
 ];
 
 export const isPublicRoute = (pathname = '') => PUBLIC_ROUTES.some((route) => route.test(pathname));
